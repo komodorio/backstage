@@ -7586,6 +7586,27 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@backstage/plugin-komodor-backend@^0.0.0, @backstage/plugin-komodor-backend@workspace:plugins/komodor-backend":
+  version: 0.0.0-use.local
+  resolution: "@backstage/plugin-komodor-backend@workspace:plugins/komodor-backend"
+  dependencies:
+    "@backstage/backend-common": "workspace:^"
+    "@backstage/backend-plugin-api": "workspace:^"
+    "@backstage/cli": "workspace:^"
+    "@backstage/config": "workspace:^"
+    "@backstage/errors": "workspace:^"
+    "@types/express": "*"
+    "@types/supertest": ^2.0.8
+    express: ^4.17.1
+    express-promise-router: ^4.1.0
+    msw: ^1.0.0
+    node-fetch: ^2.6.7
+    supertest: ^6.2.4
+    winston: ^3.2.1
+    yn: ^4.0.0
+  languageName: unknown
+  linkType: soft
+
 "@backstage/plugin-kubernetes-backend@workspace:^, @backstage/plugin-kubernetes-backend@workspace:plugins/kubernetes-backend":
   version: 0.0.0-use.local
   resolution: "@backstage/plugin-kubernetes-backend@workspace:plugins/kubernetes-backend"
@@ -25667,6 +25688,7 @@ __metadata:
     "@backstage/plugin-graphql-backend": "workspace:^"
     "@backstage/plugin-jenkins-backend": "workspace:^"
     "@backstage/plugin-kafka-backend": "workspace:^"
+    "@backstage/plugin-komodor-backend": ^0.0.0
     "@backstage/plugin-kubernetes-backend": "workspace:^"
     "@backstage/plugin-lighthouse-backend": "workspace:^"
     "@backstage/plugin-linguist-backend": "workspace:^"
