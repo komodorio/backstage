@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-import { ClusterDetails } from '../types/types';
+export const fetchWithTimeout = async (
+  resource: string,
+  timeout: number,
+  options = {},
+) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
 
-/*
- * When fetching data, this format is used for the protocol.
- */
-export interface ClusterLocatorConfig {
-  clusters: ClusterDetails[];
-}
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal,
+  });
 
-export const toClusterLocatorConfig = (configString: string) => {
-  const clusters: ClusterDetails[] = [];
-  const parsedJson = JSON.parse(configString);
+  clearTimeout(id);
 
-  for (let objectIndex = 0; objectIndex < parsedJson.length; objectIndex++) {
-    clusters.push(parsedJson[objectIndex]);
-  }
-
-  return { clusters: clusters };
+  return response;
 };

@@ -24,38 +24,33 @@ import {
   toClusterLocatorConfig,
 } from '../config/clusterLocatorConfig';
 
-let komodorWorker: KomodorWorker;
-
 export interface RouterOptions {
   logger: Logger;
   config: Config;
 }
 
-export async function createRouter(
-  options: RouterOptions,
-): Promise<express.Router> {
-  const { logger, config } = options;
-
-  // This won't be stored here..
+export function createKomodorWorker(config: Config): KomodorWorker {
   const apiKey: string = config.getString('komodor.apiKey');
   const url: string = config.getString('komodor.url');
   const locator: ClusterLocatorConfig = toClusterLocatorConfig(
     config.getString('komodor.clusters'),
   );
 
+  return new KomodorWorker({ apiKey, url, locator });
+}
+
+export async function createRouter(
+  options: RouterOptions,
+): Promise<express.Router> {
+  const { config } = options;
+
   const router = Router();
-  komodorWorker = new KomodorWorker({ apiKey, url, locator });
+  const komodorWorker = createKomodorWorker(config);
 
   router.use(express.json());
-
-  router.get('/health', (_, response) => {
-    logger.info('PONG!');
-    response.json({ status: 'ok' });
-  });
-
   router.get('/join', (req, res) => {
-    // Once a client ahs loaded it sends this request, that lets them into the
-    // komodor status update group.
+    // Once a client has loaded it sends this request, that adds them to
+    // the collection of clients that need to be updated.
     komodorWorker.addClient({ request: req, response: res });
   });
 

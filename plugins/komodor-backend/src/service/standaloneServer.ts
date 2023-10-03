@@ -17,14 +17,13 @@ import { createServiceBuilder } from '@backstage/backend-common';
 import { Server } from 'http';
 import { Logger } from 'winston';
 import { createRouter } from './router';
-import { ConfigReader } from '@backstage/config';
-
-class MockConfig extends ConfigReader {}
+import { Config } from '@backstage/config';
 
 export interface ServerOptions {
   port: number;
   enableCors: boolean;
   logger: Logger;
+  config: Config;
 }
 
 export async function startStandaloneServer(
@@ -34,7 +33,7 @@ export async function startStandaloneServer(
   logger.debug('Starting application server...');
   const router = await createRouter({
     logger,
-    config: new MockConfig({}),
+    config: options.config,
   });
 
   let service = createServiceBuilder(module)

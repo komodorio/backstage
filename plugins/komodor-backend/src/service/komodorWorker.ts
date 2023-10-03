@@ -16,7 +16,10 @@
 
 import express from 'express';
 import { KomodorApi } from './komodorApi';
-import { ClusterLocatorConfig } from '../config/clusterLocatorConfig';
+import {
+  ClusterLocatorConfig,
+  toClusterLocatorConfig,
+} from '../config/clusterLocatorConfig';
 
 const POLLING_INTERVAL = 5000;
 
@@ -38,7 +41,7 @@ export interface KomodorWorkerInfo {
  Polls the agent and updates connected clients.
  */
 export class KomodorWorker {
-  private clients: express.Response[] = [];
+  private clients: SSEClient[] = [];
   private api: KomodorApi;
   private locator: ClusterLocatorConfig;
   private signal: boolean = false;
@@ -51,17 +54,32 @@ export class KomodorWorker {
   }
 
   addClient(client: SSEClient) {
-    const { request, response } = client;
+    const { request } = client;
 
     request.headers['Content-Type'] = 'text/event-stream';
     request.headers['Cache-Control'] = 'no-cache';
     request.headers.Connection = 'keep-alive';
 
-    this.clients.push(response);
+    if (client.request.socket.localAddress) {
+      let exists: boolean = false;
+
+      for (const existingClient of this.clients) {
+        if (
+          existingClient.request.socket.localAddress ===
+          client.request.socket.localAddress
+        ) {
+          exists = true;
+        }
+      }
+
+      if (!exists) {
+        this.clients.push(client);
+      }
+    }
 
     // Remove the client when the connection closes
     request.on('close', () => {
-      const index = this.clients.indexOf(response);
+      const index = this.clients.indexOf(client);
       if (index !== -1) {
         this.clients.splice(index, 1);
       }
@@ -90,11 +108,13 @@ export class KomodorWorker {
   }
 
   private sendUpdates(data: any) {
-    const event = `data: ${JSON.stringify(data)}\n\n`;
+    const formattedData: ClusterLocatorConfig = toClusterLocatorConfig(
+      JSON.stringify(data),
+    );
 
     // Send updates to all connected clients
     this.clients.forEach(client => {
-      client.write(event);
+      client.response.write(formattedData);
     });
   }
 }

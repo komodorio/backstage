@@ -16,13 +16,15 @@
 
 import { AgentDetailsBase, ClusterDetails } from '../types/types';
 import { NotImplementedError } from '@backstage/errors';
-import fetch from 'node-fetch';
+import { fetchWithTimeout } from './fetchHelper';
 
 const REQUEST_TIMEOUT = 5000;
 
 export interface KomodorApiInfo {
   apiKey: string;
   url: string;
+  timeout?: number;
+  options?: {};
 }
 
 export interface KomodorApiBase {
@@ -35,12 +37,16 @@ export interface KomodorApiBase {
 export class KomodorApi implements KomodorApiBase {
   private apiKey: string;
   private url: string;
+  private timeout: number;
+  private options?: {};
 
   constructor(apiInfo: KomodorApiInfo) {
-    const { apiKey, url } = apiInfo;
+    const { apiKey, url, timeout, options } = apiInfo;
 
     this.apiKey = apiKey;
     this.url = url;
+    this.timeout = timeout ?? REQUEST_TIMEOUT;
+    this.options = options;
   }
 
   fetchAll(): AgentDetailsBase {
@@ -50,30 +56,17 @@ export class KomodorApi implements KomodorApiBase {
   async fetch(clusterDetails: ClusterDetails[]) {
     const headers = {
       authorization: `Bearer ${this.apiKey}`,
-      timeout: REQUEST_TIMEOUT,
+      ...this.options,
     };
 
     const request = {
       clusters: clusterDetails,
     };
 
-    return await this.fetchWithTimeout(
+    return await fetchWithTimeout(
       this.url.concat(JSON.stringify(request)),
+      this.timeout,
       headers,
     );
-  }
-
-  private async fetchWithTimeout(resource: string, options = {}) {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-
-    const response = await fetch(resource, {
-      ...options,
-      signal: controller.signal,
-    });
-
-    clearTimeout(id);
-
-    return response;
   }
 }

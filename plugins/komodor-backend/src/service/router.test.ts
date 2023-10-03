@@ -19,7 +19,36 @@ import request from 'supertest';
 import { createRouter } from './router';
 import { ConfigReader } from '@backstage/config';
 
-class MockConfigApi extends ConfigReader {}
+const configMock = {
+  komodor: {
+    apiKey: process.env.API_KEY_MOCK ?? '12345',
+    url: process.env.URL ?? 'http://localhost:3001',
+    clusters: [
+      {
+        name: 'cluster-a',
+        services: [
+          {
+            name: 'cluster-a-service-a',
+          },
+          {
+            name: 'cluster-a-service-b',
+          },
+        ],
+      },
+      {
+        name: 'cluster-b',
+        services: [
+          {
+            name: 'cluster-b-service-a',
+          },
+          {
+            name: 'cluster-b-service-b',
+          },
+        ],
+      },
+    ],
+  },
+};
 
 describe('createRouter', () => {
   let app: express.Express;
@@ -27,7 +56,7 @@ describe('createRouter', () => {
   beforeAll(async () => {
     const router = await createRouter({
       logger: getVoidLogger(),
-      config: new MockConfigApi({}),
+      config: new ConfigReader(configMock),
     });
     app = express().use(router);
   });
@@ -36,9 +65,9 @@ describe('createRouter', () => {
     jest.resetAllMocks();
   });
 
-  describe('GET /health', () => {
+  describe('GET /join', () => {
     it('returns ok', async () => {
-      const response = await request(app).get('/health');
+      const response = await request(app).get('/join');
 
       expect(response.status).toEqual(200);
       expect(response.body).toEqual({ status: 'ok' });
