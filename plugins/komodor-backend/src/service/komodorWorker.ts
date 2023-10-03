@@ -60,15 +60,16 @@ export class KomodorWorker {
     request.headers['Cache-Control'] = 'no-cache';
     request.headers.Connection = 'keep-alive';
 
-    if (client.request.socket.localAddress) {
+    if (client.request.socket.remoteAddress) {
       let exists: boolean = false;
 
       for (const existingClient of this.clients) {
         if (
-          existingClient.request.socket.localAddress ===
-          client.request.socket.localAddress
+          existingClient.request.socket.remoteAddress ===
+          client.request.socket.remoteAddress
         ) {
           exists = true;
+          break;
         }
       }
 
