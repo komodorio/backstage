@@ -51,6 +51,7 @@
     "@backstage/plugin-home": "workspace:^",
     "@backstage/plugin-jenkins": "workspace:^",
     "@backstage/plugin-kafka": "workspace:^",
+    "@backstage/plugin-komodor": "^0.0.0",
     "@backstage/plugin-kubernetes": "workspace:^",
     "@backstage/plugin-lighthouse": "workspace:^",
     "@backstage/plugin-linguist": "workspace:^",

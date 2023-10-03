@@ -72,7 +72,7 @@ describe('EntityPage Test', () => {
         </TestApiProvider>,
       );
 
-      expect(rendered.getByText('ExampleComponent')).toBeInTheDocument();
+      expect(rendered.getByText('EntityKomodorContent')).toBeInTheDocument();
 
       await expect(
         rendered.findByText('No Workflow Data'),

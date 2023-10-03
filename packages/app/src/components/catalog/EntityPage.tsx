@@ -180,6 +180,7 @@ import {
   isLinguistAvailable,
   EntityLinguistCard,
 } from '@backstage/plugin-linguist';
+import { EntityKomodorContent } from '@backstage/plugin-komodor';
 
 const customEntityFilterKind = ['Component', 'API', 'System'];
 
@@ -233,6 +234,8 @@ const techdocsContent = (
     </TechDocsAddons>
   </EntityTechdocsContent>
 );
+
+const komodorContent = <EntityKomodorContent />;
 
 /**
  * NOTE: This page is designed to work on small screens such as mobile devices.
@@ -620,6 +623,10 @@ const websiteEntityPage = (
 
     <EntityLayout.Route path="/docs" title="Docs">
       {techdocsContent}
+    </EntityLayout.Route>
+
+    <EntityLayout.Route path="/komodor" title="Komodor">
+      {komodorContent}
     </EntityLayout.Route>
 
     <EntityLayout.Route
