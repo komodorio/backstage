@@ -59,7 +59,7 @@ export class KomodorWorker {
 
     response.setHeader('Content-Type', 'text/event-stream');
 
-    if (client.request.socket.localAddress) {
+    if (client.request.socket.remoteAddress) {
       let exists: boolean = false;
 
       for (const existingClient of this.clients) {
@@ -69,6 +69,8 @@ export class KomodorWorker {
         ) {
           exists = true;
           response.end();
+
+          break;
         }
       }
 
