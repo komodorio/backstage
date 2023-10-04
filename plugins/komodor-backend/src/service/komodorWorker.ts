@@ -16,12 +16,9 @@
 
 import express from 'express';
 import { KomodorApi } from './komodorApi';
-import {
-  ClusterLocatorConfig,
-  toClusterLocatorConfig,
-} from '../config/clusterLocatorConfig';
+import { ClusterLocatorConfig } from '../config/clusterLocatorConfig';
 
-const POLLING_INTERVAL = 5000;
+const POLLING_INTERVAL = 2000;
 
 /*
  * Represents a server-side events client
@@ -54,21 +51,24 @@ export class KomodorWorker {
   }
 
   addClient(client: SSEClient) {
-    const { request } = client;
+    const { request, response } = client;
 
     request.headers['Content-Type'] = 'text/event-stream';
     request.headers['Cache-Control'] = 'no-cache';
     request.headers.Connection = 'keep-alive';
+
+    response.setHeader('Content-Type', 'text/event-stream');
 
     if (client.request.socket.localAddress) {
       let exists: boolean = false;
 
       for (const existingClient of this.clients) {
         if (
-          existingClient.request.socket.localAddress ===
-          client.request.socket.localAddress
+          existingClient.request.socket.remoteAddress ===
+          client.request.socket.remoteAddress
         ) {
           exists = true;
+          response.end();
         }
       }
 
@@ -79,6 +79,7 @@ export class KomodorWorker {
 
     // Remove the client when the connection closes
     request.on('close', () => {
+      console.log(`${client.request.socket.remoteAddress} leaves.`);
       const index = this.clients.indexOf(client);
       if (index !== -1) {
         this.clients.splice(index, 1);
@@ -93,7 +94,9 @@ export class KomodorWorker {
       try {
         const response = await this.api.fetch(this.locator.clusters);
 
-        this.sendUpdates(response.json());
+        if (response.status !== 404) {
+          this.sendUpdates(await response.json());
+        }
       } catch (error) {
         console.error('Error while polling:', error);
       }
@@ -108,13 +111,10 @@ export class KomodorWorker {
   }
 
   private sendUpdates(data: any) {
-    const formattedData: ClusterLocatorConfig = toClusterLocatorConfig(
-      JSON.stringify(data),
-    );
-
     // Send updates to all connected clients
     this.clients.forEach(client => {
-      client.response.write(formattedData);
+      client.response.write(`data: ${JSON.stringify(data)}\n\n`);
+      client.response.end();
     });
   }
 }

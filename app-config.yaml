@@ -177,6 +177,14 @@ kubernetes:
     - type: 'config'
       clusters: []
 
+komodor:
+  url: http://localhost:7008/data
+  apiKey: "90890-dda2d-32acb-efad8"
+  clusters: 
+    - name: cluster-a
+      services: 
+      - name: service-a-cluster-a
+
 kafka:
   clientId: backstage
   clusters:

@@ -18,7 +18,7 @@ import { AgentDetailsBase, ClusterDetails } from '../types/types';
 import { NotImplementedError } from '@backstage/errors';
 import { fetchWithTimeout } from './fetchHelper';
 
-const REQUEST_TIMEOUT = 5000;
+const REQUEST_TIMEOUT = 300;
 
 export interface KomodorApiInfo {
   apiKey: string;
@@ -64,7 +64,7 @@ export class KomodorApi implements KomodorApiBase {
     };
 
     return await fetchWithTimeout(
-      this.url.concat(JSON.stringify(request)),
+      this.url.concat(`/${JSON.stringify(request)}`),
       this.timeout,
       headers,
     );

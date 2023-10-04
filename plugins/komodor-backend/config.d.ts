@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 The Backstage Authors
+ * Copyright 2020 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-import { ClusterDetails } from '../types/types';
-
-/*
- * When fetching data, this format is used for the protocol.
- */
-export interface ClusterLocatorConfig {
-  clusters: ClusterDetails[];
+export interface Config {
+  komodor?: {
+    /**
+     * Agent data access url
+     */
+    url: string;
+    /**
+     * Agent API key
+     */
+    apiKey: string;
+    clusters: Array<{
+      name: string;
+      services: Array<{ name: string }>;
+    }>;
+  };
 }

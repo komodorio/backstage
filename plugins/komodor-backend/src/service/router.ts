@@ -19,10 +19,7 @@ import Router from 'express-promise-router';
 import { KomodorWorker } from './komodorWorker';
 import { Config } from '@backstage/config';
 import { Logger } from 'winston';
-import {
-  ClusterLocatorConfig,
-  toClusterLocatorConfig,
-} from '../config/clusterLocatorConfig';
+import { ClusterLocatorConfig } from '../config/clusterLocatorConfig';
 
 export interface RouterOptions {
   logger: Logger;
@@ -32,9 +29,9 @@ export interface RouterOptions {
 export function createKomodorWorker(config: Config): KomodorWorker {
   const apiKey: string = config.getString('komodor.apiKey');
   const url: string = config.getString('komodor.url');
-  const locator: ClusterLocatorConfig = toClusterLocatorConfig(
-    config.getString('komodor.clusters'),
-  );
+  const locator: ClusterLocatorConfig = {
+    clusters: config.get('komodor.clusters'),
+  };
 
   return new KomodorWorker({ apiKey, url, locator });
 }
@@ -48,6 +45,9 @@ export async function createRouter(
   const komodorWorker = createKomodorWorker(config);
 
   router.use(express.json());
+  router.get('/ping', (req, res) => {
+    res.status(200).json({ message: 'hello' });
+  });
   router.get('/join', (req, res) => {
     // Once a client has loaded it sends this request, that adds them to
     // the collection of clients that need to be updated.
