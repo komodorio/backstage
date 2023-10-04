@@ -55,7 +55,7 @@ export function EntityKomodorServiceTableCard() {
   }[] => {
     if (clusterDetails === null) return [];
 
-    return clusterDetails!.services.map(cluster => {
+    return clusterDetails.services.map(cluster => {
       return {
         name: cluster.name,
         isHealthy: cluster.status === ServiceStatus.Healthy,
