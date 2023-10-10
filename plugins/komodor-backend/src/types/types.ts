@@ -14,26 +14,34 @@
  * limitations under the License.
  */
 
-export enum ServiceStatus {
-  Healthy = 'Healthy',
-  Unhealthy = 'Unhealthy',
+/**
+ * A base class for KomodorApi requests.
+ */
+export interface KomodorApiRequestInfoBase {
+  workloadUUID: string;
+  options?: {};
 }
 
-export interface AgentDetailsBase {}
-
-export interface AgentDetails extends AgentDetailsBase {
-  name?: string;
-  clusters: ClusterDetails[];
+/**
+ * Contains all the info of komodorApi requests.
+ */
+export interface KomodorApiRequestInfo extends KomodorApiRequestInfoBase {
+  workloadName: string;
+  workloadNamespace: string;
 }
 
-export interface ClusterDetails {
-  name: string;
-  services: ServiceDetails[];
+/**
+ * A base class for KomodorApi responses.
+ */
+export interface KomodorApiResponseInfoBase {
+  workloadUUID: string;
+  options?: {};
 }
 
-export interface ServiceDetails {
-  name: string;
-  status: ServiceStatus;
-  availablePods: number;
-  totalPods: number;
+/**
+ * Contains all the info of komodorApi responses.
+ */
+export interface KomodorApiResponseInfo extends KomodorApiResponseInfoBase {
+  clusterName: string;
+  status: string;
 }

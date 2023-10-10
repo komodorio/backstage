@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import { AgentDetailsBase, ClusterDetails } from '../types/types';
 import { NotImplementedError } from '@backstage/errors';
 import { fetchWithTimeout } from './fetchHelper';
+import {
+  KomodorApiRequestInfo,
+  KomodorApiRequestInfoBase,
+  KomodorApiResponseInfo,
+  KomodorApiResponseInfoBase,
+} from '../types/types';
 
 const REQUEST_TIMEOUT = 300;
+const KOMODOR_API: string = 'workload';
 
+/**
+ * General info for the requests of the API
+ */
 export interface KomodorApiInfo {
   apiKey: string;
   url: string;
@@ -27,14 +36,23 @@ export interface KomodorApiInfo {
   options?: {};
 }
 
-export interface KomodorApiBase {
-  fetchAll(): AgentDetailsBase;
+/**
+ * A base class for KomodorApi.
+ */
+export interface KomodorApiBase<
+  T extends KomodorApiRequestInfoBase,
+  K extends KomodorApiResponseInfoBase,
+> {
+  fetchAll(): Promise<Array<Array<K>>>;
+  fetch(params: T): Promise<Array<K>>;
 }
 
 /*
  * Fetching data with custom headers and query
  */
-export class KomodorApi implements KomodorApiBase {
+export class KomodorApi
+  implements KomodorApiBase<KomodorApiRequestInfo, KomodorApiResponseInfo>
+{
   private apiKey: string;
   private url: string;
   private timeout: number;
@@ -49,24 +67,34 @@ export class KomodorApi implements KomodorApiBase {
     this.options = options;
   }
 
-  fetchAll(): AgentDetailsBase {
+  async fetchAll(): Promise<Array<Array<KomodorApiResponseInfo>>> {
     throw new NotImplementedError();
   }
 
-  async fetch(clusterDetails: ClusterDetails[]) {
+  async fetch(
+    params: KomodorApiRequestInfo,
+  ): Promise<Array<KomodorApiResponseInfo>> {
     const headers = {
       authorization: `Bearer ${this.apiKey}`,
+      method: 'POST',
       ...this.options,
     };
 
-    const request = {
-      clusters: clusterDetails,
-    };
+    const queryParams: URLSearchParams = new URLSearchParams({
+      workloadName: params.workloadName,
+      workloadNamespace: params.workloadNamespace,
+      workloadUUID: params.workloadUUID,
+    });
 
-    return await fetchWithTimeout(
-      this.url.concat(`/${JSON.stringify(request)}`),
+    const path: string = `${KOMODOR_API}?${queryParams}`;
+    const fetchURL: URL = new URL(path, this.url);
+
+    const response = await fetchWithTimeout(
+      fetchURL.toString(),
       this.timeout,
       headers,
     );
+
+    return (await response.json()) as Array<KomodorApiResponseInfo>;
   }
 }

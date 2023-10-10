@@ -14,109 +14,112 @@
  * limitations under the License.
  */
 
-import express from 'express';
+import { KomodorApiRequestInfo } from '../types/types';
 import { KomodorApi } from './komodorApi';
-import { ClusterLocatorConfig } from '../config/clusterLocatorConfig';
+import { CacheOptions, ServiceCache } from './serviceCache';
 
-const POLLING_INTERVAL = 2000;
-
-/*
- * Represents a server-side events client
- */
-export interface SSEClient {
-  request: express.Request;
-  response: express.Response;
-}
+const POLLING_INTERVAL = 5000;
+const CONSIDER_IRRELEVANT_DATA_INTERVAL = 30000;
 
 export interface KomodorWorkerInfo {
   apiKey: string;
   url: string;
-  locator: ClusterLocatorConfig;
+  cacheOptions?: CacheOptions;
 }
 
+const defaultCacheOptions: CacheOptions = {
+  shouldFetch: false,
+  shouldUpdate: false,
+};
+
 /*
- Polls the agent and updates connected clients.
+ * Polls the agent and updates connected clients.
  */
 export class KomodorWorker {
-  private clients: SSEClient[] = [];
-  private api: KomodorApi;
-  private locator: ClusterLocatorConfig;
-  private signal: boolean = false;
+  private readonly cache: ServiceCache;
+  private readonly api: KomodorApi;
+  private readonly cacheOptions: CacheOptions;
+  private signal: boolean;
 
   constructor(workerInfo: KomodorWorkerInfo) {
-    const { apiKey, url, locator } = workerInfo;
+    const { apiKey, url, cacheOptions } = workerInfo;
 
     this.api = new KomodorApi({ apiKey, url });
-    this.locator = locator;
+    this.cache = new ServiceCache();
+    this.cacheOptions = cacheOptions ?? defaultCacheOptions;
+    this.signal = false;
   }
 
-  addClient(client: SSEClient) {
-    const { request, response } = client;
+  /**
+   * Fetches services data
+   * @param request
+   * @param response
+   * @param cacheOptions Cache options for the requests
+   * @returns
+   */
+  async getServiceInfo(
+    request,
+    response,
+    cacheOptions: CacheOptions = this.cacheOptions,
+  ) {
+    const params = request.params as KomodorApiRequestInfo;
+    const existingData = this.cache.getDataItem(params)?.responseInfo;
+    const { shouldFetch, shouldUpdate } = cacheOptions;
 
-    request.headers['Content-Type'] = 'text/event-stream';
-    request.headers['Cache-Control'] = 'no-cache';
-    request.headers.Connection = 'keep-alive';
+    const data =
+      shouldFetch && existingData ? existingData : await this.api.fetch(params);
 
-    response.setHeader('Content-Type', 'text/event-stream');
-
-    if (client.request.socket.remoteAddress) {
-      let exists: boolean = false;
-
-      for (const existingClient of this.clients) {
-        if (
-          existingClient.request.socket.remoteAddress ===
-          client.request.socket.remoteAddress
-        ) {
-          exists = true;
-          response.end();
-
-          break;
-        }
-      }
-
-      if (!exists) {
-        this.clients.push(client);
-      }
+    if (shouldUpdate && !!existingData) {
+      this.cache.setDataItem(params, data);
     }
 
-    // Remove the client when the connection closes
-    request.on('close', () => {
-      console.log(`${client.request.socket.remoteAddress} leaves.`);
-      const index = this.clients.indexOf(client);
-      if (index !== -1) {
-        this.clients.splice(index, 1);
-      }
-    });
+    return await response.json(data);
   }
 
+  /**
+   * Starts the worker
+   */
   async start() {
-    this.signal = false;
+    await this.startUpdatingCache();
+  }
+
+  /**
+   * Starts updating the cache periodically
+   */
+  private async startUpdatingCache() {
+    const tempCache: ServiceCache = new ServiceCache(this.cache);
 
     while (!this.signal) {
       try {
-        const response = await this.api.fetch(this.locator.clusters);
+        tempCache.forEach(async (requestInfo, _responseItem) => {
+          // Checks it the cache can get rid if specific data which hasn't been
+          // required by the client for a long time.
+          const lastUpdateRequest =
+            this.cache.getDataItem(requestInfo)?.lastUpdateRequest;
 
-        if (response.status !== 404) {
-          this.sendUpdates(await response.json());
-        }
+          const irrelevant: boolean =
+            lastUpdateRequest !== undefined &&
+            Date.now() - lastUpdateRequest >= CONSIDER_IRRELEVANT_DATA_INTERVAL;
+
+          if (irrelevant) {
+            this.cache.removeDataItem(requestInfo);
+          }
+
+          const responseInfo = await this.api.fetch(requestInfo);
+          this.cache.setDataItem(requestInfo, responseInfo);
+        });
       } catch (error) {
-        console.error('Error while polling:', error);
+        this.stopUpdatingCache();
       }
 
-      // Polling interval delay
       await new Promise(resolve => setTimeout(resolve, POLLING_INTERVAL));
     }
   }
 
-  stop() {
+  /**
+   * Stops updating the cache
+   */
+  stopUpdatingCache() {
     this.signal = true;
-  }
-
-  private sendUpdates(data: any) {
-    // Send updates to all connected clients
-    this.clients.forEach(client => {
-      client.response.write(`data: ${JSON.stringify(data)}\n\n`);
-      client.response.end();
-    });
   }
 }
