@@ -14,17 +14,28 @@
  * limitations under the License.
  */
 import {
+  createApiFactory,
   createPlugin,
   createRoutableExtension,
+  discoveryApiRef,
+  identityApiRef,
 } from '@backstage/core-plugin-api';
-
+import { komodorApiRef, KomodorClient } from './api';
 import { rootRouteRef } from './routes';
+import { Entity } from '@backstage/catalog-model';
+
+export const KOMODOR_ID_ANNOTATION = 'komodor.com/komodor-entity-id';
 
 export const komodorPlugin = createPlugin({
   id: 'komodor',
-  routes: {
-    root: rootRouteRef,
-  },
+  apis: [
+    createApiFactory({
+      api: komodorApiRef,
+      deps: { discoveryApi: discoveryApiRef, identityApi: identityApiRef },
+      factory: ({ discoveryApi, identityApi }) =>
+        new KomodorClient({ discoveryApi, identityApi }),
+    }),
+  ],
 });
 
 export const EntityKomodorContent = komodorPlugin.provide(
@@ -37,3 +48,6 @@ export const EntityKomodorContent = komodorPlugin.provide(
     mountPoint: rootRouteRef,
   }),
 );
+
+export const isKomodorAvailable = (entity: Entity) =>
+  Boolean(entity.metadata.annotations?.[KOMODOR_ID_ANNOTATION]);

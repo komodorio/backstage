@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 The Backstage Authors
+ * Copyright 2022 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-export enum ServiceStatus {
-  Healthy = 'Healthy',
-  Unhealthy = 'Unhealthy',
-}
+import { createApiRef } from '@backstage/core-plugin-api';
+import {
+  ServiceDetailsRequestInfo,
+  ServiceInstancesResponseInfo,
+} from '../types/types';
 
-export interface ServiceDetailsRequestInfo {
-  workloadName: string;
-  workloadNamespace: string;
-  workloadUUID?: string;
-}
+export const komodorApiRef = createApiRef<KomodorApi>({
+  id: 'plugin.komodor.service',
+});
 
-export interface ServiceInstanceInfo {
-  clusterInfo: string;
-  status: string;
-  workloadUUID: string;
-}
-
-export interface ServiceInstancesResponseInfo {
-  items: ServiceInstanceInfo[];
+export interface KomodorApi {
+  getServiceInstances(
+    info: ServiceDetailsRequestInfo,
+  ): Promise<ServiceInstancesResponseInfo>;
 }

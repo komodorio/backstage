@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage-plugin-komodor
+  title: '@backstage/plugin-komodor'
+  description: A Backstage plugin that integrates towards Komodor
+spec:
+  lifecycle: experimental
+  type: backstage-frontend-plugin
+  owner: komodor-maintainers
+

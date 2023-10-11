@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 import { Table, TableColumn } from '@backstage/core-components';
-import React, { useEffect, useState } from 'react';
-import { ClusterDetails, ServiceStatus } from '../types/types';
-import { useApi, configApiRef } from '@backstage/core-plugin-api';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ServiceInstancesResponseInfo, ServiceStatus } from '../types/types';
+import { useEntity } from '@backstage/plugin-catalog-react';
+import { createServiceInstancesFetcher, komodorApiRef } from '../api';
+import { MissingAnnotationEmptyState } from '@backstage/core-components';
+import { useApi } from '@backstage/core-plugin-api';
+import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
 
 const columns: TableColumn[] = [
   {
-    title: 'Name',
-    field: 'name',
+    title: 'Cluster Name',
+    field: 'clusterName',
+    highlight: true,
+  },
+  {
+    title: 'Workload UUID',
+    field: 'link',
     highlight: true,
   },
   {
@@ -35,59 +44,70 @@ const columns: TableColumn[] = [
       };
     },
   },
-  {
+  /** {
     title: 'Available Containers',
     field: 'availability',
-  },
+  },*/
 ];
 
 export function EntityKomodorServiceTableCard() {
-  const config = useApi(configApiRef);
-  const [clusterDetails, setClusterDetails] = useState<ClusterDetails | null>(
-    null,
+  const { entity } = useEntity();
+  const api = useApi(komodorApiRef);
+  const { getServiceInstancesPeriodically, stopPeriodicFetching } =
+    createServiceInstancesFetcher(entity, api);
+
+  const [serviceInstances, setServiceInstances] =
+    useState<ServiceInstancesResponseInfo | null>(null);
+
+  const onError = useCallback(
+    (error: string) => {
+      stopPeriodicFetching();
+    },
+    [stopPeriodicFetching],
   );
 
+  useEffect(() => {
+    if (isKomodorAvailable(entity)) {
+      // Each time the component is mounted, the data is fetched (constantly).
+      getServiceInstancesPeriodically(updateServiceInstances, onError);
+    }
+  }, [getServiceInstancesPeriodically, onError, entity]);
+
+  if (!isKomodorAvailable(entity)) {
+    return <MissingAnnotationEmptyState annotation={KOMODOR_ID_ANNOTATION} />;
+  }
+
   const data = (): {
-    name: string;
+    clusterName: string;
     isHealthy: boolean;
-    availability: string;
+    workloadUUID: string;
     icon: string;
   }[] => {
-    if (clusterDetails === null) return [];
+    if (serviceInstances === null) return [];
 
-    return clusterDetails.services.map(cluster => {
+    return serviceInstances.items.map(instance => {
       return {
-        name: cluster.name,
-        isHealthy: cluster.status === ServiceStatus.Healthy,
-        availability: `${cluster.availablePods}/${cluster.totalPods}`,
+        clusterName: instance.clusterInfo,
+        isHealthy: instance.status === ServiceStatus.Healthy,
+        workloadUUID: instance.workloadUUID,
         icon: '■',
       };
     });
   };
 
-  useEffect(() => {
-    const URL = config.getString('komodor.baseUrl');
-
-    const eventSource = new EventSource(URL, {
-      withCredentials: true,
-    });
-
-    eventSource.onmessage = event => {
-      if (event.data === undefined) return;
-      const json = JSON.parse(event.data);
-
-      if (json === undefined) return;
-      setClusterDetails(json);
-    };
-  }, [config]);
+  function updateServiceInstances(
+    serviceInstancesFetch: ServiceInstancesResponseInfo,
+  ) {
+    setServiceInstances(serviceInstancesFetch);
+  }
 
   return (
     <Table
       options={{ paging: false }}
       data={data()}
       columns={columns}
-      title="Services"
-      isLoading={clusterDetails === null}
+      title="Service Instances"
+      isLoading={serviceInstances === null}
     />
   );
 }

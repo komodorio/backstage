@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: komodor-mock
+  description: Mock for testing Komodor
+  komodor.com/komodor-entity-id: 123efa3789ff0dc 
+  wokloadName: 'my_workload_name'
+  workloadNamespace: 'my_workload_namespace'
+  workloadUUID: 'my_workload_uuid'
+  intervalMs: 5000
+spec:
+  type: library
+  lifecycle: experimental
+  owner: tal
+  system: komodor
