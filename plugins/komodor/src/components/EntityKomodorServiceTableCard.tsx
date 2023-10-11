@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import { Table, TableColumn } from '@backstage/core-components';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ServiceInstancesResponseInfo, ServiceStatus } from '../types/types';
 import { useEntity } from '@backstage/plugin-catalog-react';
-import { createServiceInstancesFetcher, komodorApiRef } from '../api';
+import { useServiceInstancesFetcher, komodorApiRef } from '../api';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
 import { useApi } from '@backstage/core-plugin-api';
 import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
@@ -53,25 +53,24 @@ const columns: TableColumn[] = [
 export function EntityKomodorServiceTableCard() {
   const { entity } = useEntity();
   const api = useApi(komodorApiRef);
-  const { getServiceInstancesPeriodically, stopPeriodicFetching } =
-    createServiceInstancesFetcher(entity, api);
+  const { fetcher } = useServiceInstancesFetcher(entity, api);
 
   const [serviceInstances, setServiceInstances] =
     useState<ServiceInstancesResponseInfo | null>(null);
 
   const onError = useCallback(
     (error: string) => {
-      stopPeriodicFetching();
+      fetcher?.stopPeriodicFetching();
     },
-    [stopPeriodicFetching],
+    [fetcher],
   );
 
   useEffect(() => {
-    if (isKomodorAvailable(entity)) {
+    if (isKomodorAvailable(entity) && fetcher !== undefined) {
       // Each time the component is mounted, the data is fetched (constantly).
-      getServiceInstancesPeriodically(updateServiceInstances, onError);
+      fetcher.getServiceInstancesPeriodically(updateServiceInstances, onError);
     }
-  }, [getServiceInstancesPeriodically, onError, entity]);
+  }, [fetcher, onError, entity]);
 
   if (!isKomodorAvailable(entity)) {
     return <MissingAnnotationEmptyState annotation={KOMODOR_ID_ANNOTATION} />;

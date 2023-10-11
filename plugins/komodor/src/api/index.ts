@@ -16,4 +16,4 @@
 
 export * from './komodorApi';
 export * from './komodorClient';
-export * from './createServiceInstancesFetcher';
+export * from './useServiceInstancesFetcher';
