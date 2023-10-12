@@ -15,7 +15,11 @@
  */
 import { Table, TableColumn } from '@backstage/core-components';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ServiceInstancesResponseInfo, ServiceStatus } from '../types/types';
+import {
+  ServiceInstanceInfo,
+  ServiceInstancesResponseInfo,
+  ServiceStatus,
+} from '../types/types';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { useServiceInstancesFetcher, komodorApiRef } from '../api';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
@@ -30,7 +34,7 @@ const columns: TableColumn[] = [
   },
   {
     title: 'Workload UUID',
-    field: 'link',
+    field: 'workloadUUID',
     highlight: true,
   },
   {
@@ -55,8 +59,9 @@ export function EntityKomodorServiceTableCard() {
   const api = useApi(komodorApiRef);
   const { fetcher } = useServiceInstancesFetcher(entity, api);
 
-  const [serviceInstances, setServiceInstances] =
-    useState<ServiceInstancesResponseInfo | null>(null);
+  const [serviceInstances, setServiceInstances] = useState<
+    ServiceInstanceInfo[] | null
+  >(null);
 
   const onError = useCallback(
     (error: string) => {
@@ -84,9 +89,9 @@ export function EntityKomodorServiceTableCard() {
   }[] => {
     if (serviceInstances === null) return [];
 
-    return serviceInstances.items.map(instance => {
+    return serviceInstances.map(instance => {
       return {
-        clusterName: instance.clusterInfo,
+        clusterName: instance.clusterName,
         isHealthy: instance.status === ServiceStatus.Healthy,
         workloadUUID: instance.workloadUUID,
         icon: '■',
@@ -95,7 +100,7 @@ export function EntityKomodorServiceTableCard() {
   };
 
   function updateServiceInstances(
-    serviceInstancesFetch: ServiceInstancesResponseInfo,
+    serviceInstancesFetch: ServiceInstanceInfo[],
   ) {
     setServiceInstances(serviceInstancesFetch);
   }

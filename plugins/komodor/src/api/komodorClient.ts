@@ -20,10 +20,12 @@ import {} from '@backstage/plugin-linguist-common';
 import { KomodorApi } from './komodorApi';
 import {
   ServiceDetailsRequestInfo,
+  ServiceInstanceInfo,
   ServiceInstancesResponseInfo,
 } from '../types/types';
 
 const PLUGIN_ID: string = 'komodor';
+const PATH: string = 'services';
 
 export class KomodorClient implements KomodorApi {
   private readonly discoveryApi: DiscoveryApi;
@@ -45,7 +47,7 @@ export class KomodorClient implements KomodorApi {
    */
   public async getServiceInstances(
     info: ServiceDetailsRequestInfo,
-  ): Promise<ServiceInstancesResponseInfo> {
+  ): Promise<ServiceInstanceInfo[]> {
     const { workloadName, workloadNamespace, workloadUUID } = info;
 
     const path: string = `?workload_name=${workloadName};workload_namespace=${workloadNamespace};workload_uuid=${workloadUUID}`;
@@ -58,7 +60,9 @@ export class KomodorClient implements KomodorApi {
    * A more generic fetching method
    */
   private async get<T>(path: string): Promise<T> {
-    const baseUrl = `${await this.discoveryApi.getBaseUrl(PLUGIN_ID)}`;
+    const baseUrl = `${await this.discoveryApi.getBaseUrl(
+      `${PLUGIN_ID}`,
+    )}`.concat(`/${PATH}`);
     const url = new URL(path, baseUrl);
 
     const { token } = await this.identityApi.getCredentials();

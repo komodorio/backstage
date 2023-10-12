@@ -15,7 +15,10 @@
  */
 
 import { Entity } from '@backstage/catalog-model';
-import { ServiceInstancesResponseInfo } from '../types/types';
+import {
+  ServiceInstanceInfo,
+  ServiceInstancesResponseInfo,
+} from '../types/types';
 import { runPeriodically } from '../tools';
 import { KomodorApi } from './komodorApi';
 import { useMemo } from 'react';
@@ -41,7 +44,7 @@ class ServiceInstancesFetcher {
   }
 
   public getServiceInstancesPeriodically(
-    updateCallback: (data: ServiceInstancesResponseInfo) => void,
+    updateCallback: (data: ServiceInstanceInfo[]) => void,
     errorCallback: (errorMessage: string) => void,
   ) {
     const run = async () => {

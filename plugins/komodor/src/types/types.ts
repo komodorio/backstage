@@ -26,7 +26,7 @@ export interface ServiceDetailsRequestInfo {
 }
 
 export interface ServiceInstanceInfo {
-  clusterInfo: string;
+  clusterName: string;
   status: string;
   workloadUUID: string;
 }
