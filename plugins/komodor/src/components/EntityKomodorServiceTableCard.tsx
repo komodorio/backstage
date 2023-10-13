@@ -88,7 +88,6 @@ export function EntityKomodorServiceTableCard() {
     icon: string;
   }[] => {
     if (serviceInstances === null) return [];
-
     return serviceInstances.map(instance => {
       return {
         clusterName: instance.clusterName,

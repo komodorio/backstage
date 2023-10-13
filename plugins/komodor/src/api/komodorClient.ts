@@ -50,8 +50,13 @@ export class KomodorClient implements KomodorApi {
   ): Promise<ServiceInstanceInfo[]> {
     const { workloadName, workloadNamespace, workloadUUID } = info;
 
-    const path: string = `?workload_name=${workloadName};workload_namespace=${workloadNamespace};workload_uuid=${workloadUUID}`;
-    const items = await this.get<any>(path);
+    const path: URLSearchParams = new URLSearchParams({
+      workload_name: workloadName ?? 'default',
+      workload_namespace: workloadNamespace ?? 'default',
+      workload_uuid: workloadUUID ?? 'default',
+    });
+
+    const items = await this.get<any>(`/${PATH}?`.concat(`${path.toString()}`));
 
     return items;
   }
@@ -60,11 +65,8 @@ export class KomodorClient implements KomodorApi {
    * A more generic fetching method
    */
   private async get<T>(path: string): Promise<T> {
-    const baseUrl = `${await this.discoveryApi.getBaseUrl(
-      `${PLUGIN_ID}`,
-    )}`.concat(`/${PATH}`);
-    const url = new URL(path, baseUrl);
-
+    const baseUrl = `${await this.discoveryApi.getBaseUrl(`${PLUGIN_ID}`)}`;
+    const url = baseUrl.concat(path);
     const { token } = await this.identityApi.getCredentials();
     const response = await fetch(url.toString(), {
       headers: token ? { komodorToken: `${token}` } : {},

@@ -23,6 +23,10 @@ import { runPeriodically } from '../tools';
 import { KomodorApi } from './komodorApi';
 import { useMemo } from 'react';
 
+const PLUGIN_WORKLOAD_UUID_ANNOTATION = 'komodor.com/workloadUUID';
+const PLUGIN_WORKLOAD_NAME_ANNOTATION = 'komodor.com/workloadName';
+const PLUGIN_WORKLOAD_NAMESPACE_ANNOTATION = 'komodor.com/workloadNamespace';
+
 class ServiceInstancesFetcher {
   private entity: Entity;
   private api: KomodorApi;
@@ -51,13 +55,18 @@ class ServiceInstancesFetcher {
       try {
         const response = await this.api.getServiceInstances({
           workloadName:
-            this.entity.metadata?.annotations?.workloadName ?? 'default',
+            this.entity.metadata?.annotations?.[
+              `${PLUGIN_WORKLOAD_NAME_ANNOTATION}`
+            ] ?? 'default',
           workloadNamespace:
-            this.entity.metadata?.annotations?.workloadNamespace ?? 'default',
+            this.entity.metadata?.annotations?.[
+              `${PLUGIN_WORKLOAD_NAMESPACE_ANNOTATION}`
+            ] ?? 'default',
           workloadUUID:
-            this.entity.metadata?.annotations?.workloadUUID ?? 'default',
+            this.entity.metadata?.annotations?.[
+              `${PLUGIN_WORKLOAD_UUID_ANNOTATION}`
+            ] ?? 'default',
         });
-
         updateCallback(response);
       } catch (error) {
         errorCallback(error);
