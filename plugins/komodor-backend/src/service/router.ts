@@ -19,26 +19,31 @@ import Router from 'express-promise-router';
 import { KomodorWorker } from './komodorWorker';
 import { Config } from '@backstage/config';
 import { Logger } from 'winston';
+import { CacheOptions } from './serviceCache';
 
 export interface RouterOptions {
   logger: Logger;
   config: Config;
+  cacheOptions?: CacheOptions;
 }
 
-export function createKomodorWorker(config: Config): KomodorWorker {
+export function createKomodorWorker(
+  config: Config,
+  cacheOptions?: CacheOptions,
+): KomodorWorker {
   const apiKey: string = config.getString('komodor.apiKey');
   const url: string = config.getString('komodor.url');
 
-  return new KomodorWorker({ apiKey, url });
+  return new KomodorWorker({ apiKey, url, cacheOptions });
 }
 
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
-  const { config } = options;
+  const { config, cacheOptions } = options;
 
   const router = Router();
-  const komodorWorker = createKomodorWorker(config);
+  const komodorWorker = createKomodorWorker(config, cacheOptions);
   komodorWorker.start();
 
   router.use(express.json());

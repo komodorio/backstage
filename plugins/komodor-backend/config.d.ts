@@ -24,9 +24,5 @@ export interface Config {
      * Agent API key
      */
     apiKey: string;
-    clusters: Array<{
-      name: string;
-      services: Array<{ name: string }>;
-    }>;
   };
 }

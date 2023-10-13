@@ -177,14 +177,6 @@ kubernetes:
     - type: 'config'
       clusters: []
 
-komodor:
-  url: http://localhost:7008/data
-  apiKey: "90890-dda2d-32acb-efad8"
-  clusters: 
-    - name: cluster-a
-      services: 
-      - name: service-a-cluster-a
-
 kafka:
   clientId: backstage
   clusters:
@@ -299,6 +291,9 @@ catalog:
       target: ../../plugins/scaffolder-backend/sample-templates/all-templates.yaml
       rules:
         - allow: [Template]
+    # Komodor example templates
+    - type: file
+      target: ../../plugins/komodor-backend/examples/komodor-mock.yaml
 scaffolder:
   # Use to customize default commit author info used when new components are created
   # defaultAuthor:

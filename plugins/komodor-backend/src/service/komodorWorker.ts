@@ -32,9 +32,6 @@ const defaultCacheOptions: CacheOptions = {
   shouldUpdate: false,
 };
 
-/*
- * Polls the agent and updates connected clients.
- */
 export class KomodorWorker {
   private readonly cache: ServiceCache;
   private readonly api: KomodorApi;
@@ -50,54 +47,48 @@ export class KomodorWorker {
     this.signal = false;
   }
 
-  /**
-   * Fetches services data
-   * @param request
-   * @param response
-   * @param cacheOptions Cache options for the requests
-   * @returns
-   */
   async getServiceInfo(
     request,
     response,
     cacheOptions: CacheOptions = this.cacheOptions,
   ) {
-    const params = request.params as KomodorApiRequestInfo;
-    const existingData = this.cache.getDataItem(params)?.responseInfo;
+    const queryParams = new URLSearchParams(request.query);
+    const params: KomodorApiRequestInfo = {
+      workloadName: queryParams.get('workload_name') ?? 'default',
+      workloadNamespace: queryParams.get('workload_namespace') ?? 'default',
+      workloadUUID: queryParams.get('workload_uuid') ?? 'default',
+    };
+
     const { shouldFetch, shouldUpdate } = cacheOptions;
+    const existingData = shouldFetch
+      ? this.cache.getDataItem(params)?.responseInfo
+      : undefined;
 
     const data =
       shouldFetch && existingData ? existingData : await this.api.fetch(params);
 
-    if (shouldUpdate && !!existingData) {
+    if (shouldUpdate) {
       this.cache.setDataItem(params, data);
     }
 
     return await response.json(data);
   }
 
-  /**
-   * Starts the worker
-   */
   async start() {
-    await this.startUpdatingCache();
+    if (this.cacheOptions.shouldUpdate) {
+      await this.startUpdatingCache();
+    }
   }
 
-  /**
-   * Starts updating the cache periodically
-   */
   private async startUpdatingCache() {
-    const tempCache: ServiceCache = new ServiceCache(this.cache);
+    const tempCache = new ServiceCache(this.cache);
 
     while (!this.signal) {
       try {
         tempCache.forEach(async (requestInfo, _responseItem) => {
-          // Checks it the cache can get rid if specific data which hasn't been
-          // required by the client for a long time.
           const lastUpdateRequest =
             this.cache.getDataItem(requestInfo)?.lastUpdateRequest;
-
-          const irrelevant: boolean =
+          const irrelevant =
             lastUpdateRequest !== undefined &&
             Date.now() - lastUpdateRequest >= CONSIDER_IRRELEVANT_DATA_INTERVAL;
 
@@ -116,9 +107,6 @@ export class KomodorWorker {
     }
   }
 
-  /**
-   * Stops updating the cache
-   */
   stopUpdatingCache() {
     this.signal = true;
   }

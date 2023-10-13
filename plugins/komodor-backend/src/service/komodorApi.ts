@@ -23,8 +23,8 @@ import {
   KomodorApiResponseInfoBase,
 } from '../types/types';
 
-const REQUEST_TIMEOUT = 300;
-const KOMODOR_API: string = 'workload';
+const REQUEST_TIMEOUT = 3000;
+const KOMODOR_API = 'workload';
 
 /**
  * General info for the requests of the API
@@ -33,7 +33,7 @@ export interface KomodorApiInfo {
   apiKey: string;
   url: string;
   timeout?: number;
-  options?: {};
+  options?: Record<string, unknown>;
 }
 
 /**
@@ -43,8 +43,8 @@ export interface KomodorApiBase<
   T extends KomodorApiRequestInfoBase,
   K extends KomodorApiResponseInfoBase,
 > {
-  fetchAll(): Promise<Array<Array<K>>>;
-  fetch(params: T): Promise<Array<K>>;
+  fetchAll(): Promise<K[]>;
+  fetch(params: T): Promise<K[]>;
 }
 
 /*
@@ -56,7 +56,7 @@ export class KomodorApi
   private apiKey: string;
   private url: string;
   private timeout: number;
-  private options?: {};
+  private options?: Record<string, unknown>;
 
   constructor(apiInfo: KomodorApiInfo) {
     const { apiKey, url, timeout, options } = apiInfo;
@@ -67,27 +67,27 @@ export class KomodorApi
     this.options = options;
   }
 
-  async fetchAll(): Promise<Array<Array<KomodorApiResponseInfo>>> {
+  async fetchAll(): Promise<KomodorApiResponseInfo[]> {
     throw new NotImplementedError();
   }
 
   async fetch(
     params: KomodorApiRequestInfo,
-  ): Promise<Array<KomodorApiResponseInfo>> {
+  ): Promise<KomodorApiResponseInfo[]> {
     const headers = {
       authorization: `Bearer ${this.apiKey}`,
       method: 'POST',
       ...this.options,
     };
 
-    const queryParams: URLSearchParams = new URLSearchParams({
+    const queryParams = new URLSearchParams({
       workloadName: params.workloadName,
       workloadNamespace: params.workloadNamespace,
       workloadUUID: params.workloadUUID,
     });
 
-    const path: string = `${KOMODOR_API}?${queryParams}`;
-    const fetchURL: URL = new URL(path, this.url);
+    const path = `${KOMODOR_API}?${queryParams.toString()}`; // Convert URLSearchParams to a string
+    const fetchURL = new URL(path, this.url);
 
     const response = await fetchWithTimeout(
       fetchURL.toString(),
@@ -95,6 +95,6 @@ export class KomodorApi
       headers,
     );
 
-    return (await response.json()) as Array<KomodorApiResponseInfo>;
+    return (await response.json()) as KomodorApiResponseInfo[];
   }
 }

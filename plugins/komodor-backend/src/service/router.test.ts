@@ -22,31 +22,7 @@ import { ConfigReader } from '@backstage/config';
 const configMock = {
   komodor: {
     apiKey: process.env.API_KEY_MOCK ?? '12345',
-    url: process.env.URL ?? 'http://localhost:3001',
-    clusters: [
-      {
-        name: 'cluster-a',
-        services: [
-          {
-            name: 'cluster-a-service-a',
-          },
-          {
-            name: 'cluster-a-service-b',
-          },
-        ],
-      },
-      {
-        name: 'cluster-b',
-        services: [
-          {
-            name: 'cluster-b-service-a',
-          },
-          {
-            name: 'cluster-b-service-b',
-          },
-        ],
-      },
-    ],
+    url: process.env.URL ?? 'http://localhost:7008',
   },
 };
 

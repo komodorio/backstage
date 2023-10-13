@@ -22,17 +22,8 @@ import { KomodorApiRequestInfo, KomodorApiResponseInfo } from '../types/types';
 export interface ServiceCacheItem {
   data: {
     items: Array<{
-      /**
-       * Client's request
-       */
       requestInfo: KomodorApiRequestInfo;
-      /**
-       * All the instances of the service, according to the request.
-       */
       responseInfo: Array<KomodorApiResponseInfo>;
-      /**
-       * Last time the info was requested and updated.
-       */
       lastUpdateRequest: number;
     }>;
   };
@@ -42,13 +33,7 @@ export interface ServiceCacheItem {
  * Options for accessing the cache
  */
 export interface CacheOptions {
-  /**
-   * Determined whether data should be fetched from the cache
-   */
   shouldFetch: boolean;
-  /**
-   * Determines whether externally fetched data should be stored in the cache
-   */
   shouldUpdate: boolean;
 }
 
@@ -72,28 +57,16 @@ export class ServiceCache {
    * @returns Returns the desired data.
    */
   getDataItem(params: KomodorApiRequestInfo) {
-    let item;
-
-    if (this.cache.has(params.workloadUUID)) {
-      const length: number =
-        this.cache.get(params.workloadUUID)?.data?.items?.length ?? 0;
-
-      for (let index = 0; index < length; index++) {
-        const currentItem = this.cache.get(params.workloadUUID)?.data.items[
-          index
-        ];
-
-        if (
-          currentItem?.requestInfo.workloadName === params.workloadName &&
-          currentItem?.requestInfo.workloadNamespace ===
-            params.workloadNamespace
-        ) {
-          item = currentItem;
-        }
-      }
+    const uuid = params.workloadUUID;
+    if (this.cache.has(uuid)) {
+      const items = this.cache.get(uuid)?.data.items || [];
+      return items.find(
+        item =>
+          item.requestInfo.workloadName === params.workloadName &&
+          item.requestInfo.workloadNamespace === params.workloadNamespace,
+      );
     }
-
-    return item;
+    return undefined;
   }
 
   /**
@@ -106,71 +79,59 @@ export class ServiceCache {
     params: KomodorApiRequestInfo,
     data: Array<KomodorApiResponseInfo>,
   ) {
-    const dataItem = this.getDataItem(params);
-
-    if (dataItem) {
-      dataItem.responseInfo = data;
-      dataItem.lastUpdateRequest = Date.now();
-    } else {
-      if (this.cache.has(params.workloadUUID)) {
-        this.cache.get(params.workloadUUID)?.data.items.push({
+    const uuid = params.workloadUUID;
+    if (this.cache.has(uuid)) {
+      const item = this.getDataItem(params);
+      if (item) {
+        item.responseInfo = data;
+        item.lastUpdateRequest = Date.now();
+      } else {
+        this.cache.get(uuid)?.data.items.push({
           requestInfo: params,
           responseInfo: data,
           lastUpdateRequest: Date.now(),
         });
-      } else {
-        const cacheItem = {
-          data: {
-            items: [
-              {
-                requestInfo: params,
-                responseInfo: data,
-                lastUpdateRequest: Date.now(),
-              },
-            ],
-          },
-        };
-
-        this.cache.set(params.workloadUUID, cacheItem);
       }
+    } else {
+      const cacheItem = {
+        data: {
+          items: [
+            {
+              requestInfo: params,
+              responseInfo: data,
+              lastUpdateRequest: Date.now(),
+            },
+          ],
+        },
+      };
+      this.cache.set(uuid, cacheItem);
     }
   }
 
   /**
    * Removes a data item
    * @param params Request's parameters
-   * @returns True if operation succeeded, false of not (possibly not found).
+   * @returns True if the operation succeeded, false if not (possibly not found).
    */
   removeDataItem(params: KomodorApiRequestInfo): boolean {
-    let result = false;
-
-    if (this.cache.has(params.workloadUUID)) {
-      const length: number =
-        this.cache.get(params.workloadUUID)?.data?.items?.length ?? 0;
-
-      for (let index = 0; index < length && !result; index++) {
-        const currentItem = this.cache.get(params.workloadUUID)?.data.items[
-          index
-        ];
-
+    const uuid = params.workloadUUID;
+    if (this.cache.has(uuid)) {
+      const items = this.cache.get(uuid)?.data.items || [];
+      for (let index = 0; index < items.length; index++) {
+        const currentItem = items[index];
         if (
-          currentItem?.requestInfo.workloadName === params.workloadName &&
-          currentItem?.requestInfo.workloadNamespace ===
-            params.workloadNamespace
+          currentItem.requestInfo.workloadName === params.workloadName &&
+          currentItem.requestInfo.workloadNamespace === params.workloadNamespace
         ) {
-          const cacheItem = this.cache.get(params.workloadUUID);
-          cacheItem?.data.items.splice(index, 1);
-
-          if (cacheItem?.data.items.length === 0) {
-            this.cache.delete(params.workloadUUID);
+          items.splice(index, 1);
+          if (items.length === 0) {
+            this.cache.delete(uuid);
           }
-
-          result = true;
+          return true;
         }
       }
     }
-
-    return result;
+    return false;
   }
 
   /**
@@ -184,7 +145,8 @@ export class ServiceCache {
     ) => void,
   ) {
     this.cache.forEach((_value, key) => {
-      this.cache.get(key)?.data.items.forEach(item => {
+      const items = this.cache.get(key)?.data.items || [];
+      items.forEach(item => {
         callback(item.requestInfo, item.responseInfo);
       });
     });
