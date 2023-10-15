@@ -15,10 +15,7 @@
  */
 
 import { Entity } from '@backstage/catalog-model';
-import {
-  ServiceInstanceInfo,
-  ServiceInstancesResponseInfo,
-} from '../types/types';
+import { ServiceInstanceInfo } from '../types/types';
 import { runPeriodically } from '../tools';
 import { KomodorApi } from './komodorApi';
 import { useMemo } from 'react';

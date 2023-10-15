@@ -18,11 +18,7 @@ import { DiscoveryApi, IdentityApi } from '@backstage/core-plugin-api';
 import { ResponseError } from '@backstage/errors';
 import {} from '@backstage/plugin-linguist-common';
 import { KomodorApi } from './komodorApi';
-import {
-  ServiceDetailsRequestInfo,
-  ServiceInstanceInfo,
-  ServiceInstancesResponseInfo,
-} from '../types/types';
+import { ServiceDetailsRequestInfo, ServiceInstanceInfo } from '../types/types';
 
 const PLUGIN_ID: string = 'komodor';
 const PATH: string = 'services';

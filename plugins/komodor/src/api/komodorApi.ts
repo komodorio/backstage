@@ -15,11 +15,7 @@
  */
 
 import { createApiRef } from '@backstage/core-plugin-api';
-import {
-  ServiceDetailsRequestInfo,
-  ServiceInstanceInfo,
-  ServiceInstancesResponseInfo,
-} from '../types/types';
+import { ServiceDetailsRequestInfo, ServiceInstanceInfo } from '../types/types';
 
 export const komodorApiRef = createApiRef<KomodorApi>({
   id: 'plugin.komodor.service',

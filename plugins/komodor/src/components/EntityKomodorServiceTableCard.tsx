@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 import { Table, TableColumn } from '@backstage/core-components';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ServiceInstanceInfo,
-  ServiceInstancesResponseInfo,
-  ServiceStatus,
-} from '../types/types';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ServiceInstanceInfo, ServiceStatus } from '../types/types';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { useServiceInstancesFetcher, komodorApiRef } from '../api';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';

@@ -30,7 +30,3 @@ export interface ServiceInstanceInfo {
   status: string;
   workloadUUID: string;
 }
-
-export interface ServiceInstancesResponseInfo {
-  items: ServiceInstanceInfo[];
-}
