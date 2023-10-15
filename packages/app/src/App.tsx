@@ -319,8 +319,7 @@ const routes = (
     <Route path="/score-board" element={<ScoreBoardPage />} />
     <Route path="/stackstorm" element={<StackstormPage />} />
     <Route path="/puppetdb" element={<PuppetDbPage />} />
-    <Route path="/devtools" element={<DevToolsPage />} />
-    <Route path="/devtools" element={<KomodorPage />}>
+    <Route path="/devtools" element={<DevToolsPage />}>
       {customDevToolsPage}
     </Route>
   </FlatRoutes>
