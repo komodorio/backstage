@@ -33,7 +33,14 @@ export interface ServiceCacheItem {
  * Options for accessing the cache
  */
 export interface CacheOptions {
+  /**
+   * Should data be fetched from the cache if exists
+   */
   shouldFetch: boolean;
+
+  /**
+   * Should the cache be updated constantly.
+   */
   shouldUpdate: boolean;
 }
 

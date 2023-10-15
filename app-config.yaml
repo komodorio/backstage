@@ -293,7 +293,7 @@ catalog:
         - allow: [Template]
     # Komodor example templates
     - type: file
-      target: ../../plugins/komodor-backend/catalog-info.yaml
+      target: ../../plugins/komodor-backend/examples/komodor-mock.yaml
 scaffolder:
   # Use to customize default commit author info used when new components are created
   # defaultAuthor:

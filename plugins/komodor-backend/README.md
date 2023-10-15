@@ -27,6 +27,12 @@ The url of the Komodor service.
 
 The API key used for accessing the Komodor service.
 
+## `cache` (optional)
+
+- `shouldFetch`: Should data be fetched from the cache each client request, if
+  already exists. Default is false.
+- `shouldUpdate`: Should the cache be updated constantly.
+
 In addition, configuration of an entity's `catalog-info.yaml` helps identify which specific Komodor object(s) should be presented on a specific entity catalog page.
 Specifically you might add the reference to this file to the `app.config.yaml` file,
 by adding it to the `catalog.locations` field.

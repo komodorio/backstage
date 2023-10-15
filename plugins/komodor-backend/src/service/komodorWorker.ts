@@ -28,8 +28,8 @@ export interface KomodorWorkerInfo {
 }
 
 const defaultCacheOptions: CacheOptions = {
-  shouldFetch: false,
-  shouldUpdate: false,
+  shouldFetch: true,
+  shouldUpdate: true,
 };
 
 export class KomodorWorker {
@@ -59,7 +59,7 @@ export class KomodorWorker {
       workloadUUID: queryParams.get('workload_uuid') ?? 'default',
     };
 
-    const { shouldFetch, shouldUpdate } = cacheOptions;
+    const { shouldFetch } = cacheOptions;
     const existingData = shouldFetch
       ? this.cache.getDataItem(params)?.responseInfo
       : undefined;
@@ -67,7 +67,8 @@ export class KomodorWorker {
     const data =
       shouldFetch && existingData ? existingData : await this.api.fetch(params);
 
-    if (shouldUpdate) {
+    // Stores the fresh data as long as the data the cache is in use.
+    if (shouldFetch) {
       this.cache.setDataItem(params, data);
     }
 

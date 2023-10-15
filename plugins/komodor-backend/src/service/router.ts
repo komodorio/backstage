@@ -24,15 +24,31 @@ import { CacheOptions } from './serviceCache';
 export interface RouterOptions {
   logger: Logger;
   config: Config;
-  cacheOptions?: CacheOptions;
 }
 
-export function createKomodorWorker(
-  config: Config,
-  cacheOptions?: CacheOptions,
-): KomodorWorker {
+export function createKomodorWorker(config: Config): KomodorWorker {
+  /**
+   * Parameters that will throw intentionally if not configured properly.
+   * They are mandatory!
+   */
   const apiKey: string = config.getString('komodor.apiKey');
   const url: string = config.getString('komodor.url');
+
+  /**
+   * Optional parameters
+   */
+  const shouldFetch: boolean = config.has('komodor.cache.shouldFetch')
+    ? config.getString('komodor.cache.shouldFetch') === 'true'
+    : false;
+
+  const shouldUpdate: boolean = config.has('komodor.cache.shouldUpdate')
+    ? config.getString('komodor.cache.shouldUpdate') === 'true'
+    : false;
+
+  const cacheOptions: CacheOptions = {
+    shouldFetch: shouldFetch,
+    shouldUpdate: shouldUpdate,
+  };
 
   return new KomodorWorker({ apiKey, url, cacheOptions });
 }
@@ -40,10 +56,10 @@ export function createKomodorWorker(
 export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
-  const { config, cacheOptions } = options;
+  const { config } = options;
 
   const router = Router();
-  const komodorWorker = createKomodorWorker(config, cacheOptions);
+  const komodorWorker = createKomodorWorker(config);
   komodorWorker.start();
 
   router.use(express.json());
