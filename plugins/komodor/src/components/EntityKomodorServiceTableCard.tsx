@@ -21,6 +21,7 @@ import { useServiceInstancesFetcher, komodorApiRef } from '../api';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
 import { useApi } from '@backstage/core-plugin-api';
 import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
+import { EntityKomodorServiceWarningCard } from './warnings';
 
 const columns: TableColumn[] = [
   {
@@ -54,16 +55,32 @@ export function EntityKomodorServiceTableCard() {
   const { entity } = useEntity();
   const api = useApi(komodorApiRef);
   const { fetcher } = useServiceInstancesFetcher(entity, api);
+  const [apiError, setApiError] = useState('');
 
   const [serviceInstances, setServiceInstances] = useState<
     ServiceInstanceInfo[] | null
   >(null);
 
+  const updateServiceInstances = useCallback(
+    (serviceInstancesFetch: ServiceInstanceInfo[]) => {
+      if (apiError) {
+        setApiError('');
+      }
+
+      setServiceInstances(serviceInstancesFetch);
+    },
+    [apiError, setApiError, setServiceInstances],
+  );
+
   const onError = useCallback(
     (error: string) => {
-      fetcher?.stopPeriodicFetching();
+      if (fetcher.getIsWorking()) {
+        if (apiError !== error) {
+          setApiError(error);
+        }
+      }
     },
-    [fetcher],
+    [fetcher, apiError, setApiError],
   );
 
   useEffect(() => {
@@ -71,7 +88,15 @@ export function EntityKomodorServiceTableCard() {
       // Each time the component is mounted, the data is fetched (constantly).
       fetcher.getServiceInstancesPeriodically(updateServiceInstances, onError);
     }
-  }, [fetcher, onError, entity]);
+
+    return () => {
+      if (fetcher !== undefined) {
+        if (fetcher.getIsWorking()) {
+          fetcher.stopPeriodicFetching();
+        }
+      }
+    };
+  }, [fetcher, onError, updateServiceInstances, entity]);
 
   if (!isKomodorAvailable(entity)) {
     return <MissingAnnotationEmptyState annotation={KOMODOR_ID_ANNOTATION} />;
@@ -94,19 +119,23 @@ export function EntityKomodorServiceTableCard() {
     });
   };
 
-  function updateServiceInstances(
-    serviceInstancesFetch: ServiceInstanceInfo[],
-  ) {
-    setServiceInstances(serviceInstancesFetch);
-  }
-
   return (
-    <Table
-      options={{ paging: false }}
-      data={data()}
-      columns={columns}
-      title="Service Instances"
-      isLoading={serviceInstances === null}
-    />
+    <>
+      {apiError ? (
+        <EntityKomodorServiceWarningCard
+          title="An error occurred in the server"
+          message={apiError}
+        />
+      ) : (
+        <></>
+      )}
+      <Table
+        options={{ paging: false }}
+        data={data()}
+        columns={columns}
+        title="Service Instances"
+        isLoading={serviceInstances === null}
+      />
+    </>
   );
 }

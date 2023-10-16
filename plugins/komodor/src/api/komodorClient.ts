@@ -44,17 +44,23 @@ export class KomodorClient implements KomodorApi {
   public async getServiceInstances(
     info: ServiceDetailsRequestInfo,
   ): Promise<ServiceInstanceInfo[]> {
-    const { workloadName, workloadNamespace, workloadUUID } = info;
+    try {
+      const { workloadName, workloadNamespace, workloadUUID } = info;
 
-    const path: URLSearchParams = new URLSearchParams({
-      workload_name: workloadName ?? 'default',
-      workload_namespace: workloadNamespace ?? 'default',
-      workload_uuid: workloadUUID ?? 'default',
-    });
+      const path: URLSearchParams = new URLSearchParams({
+        workload_name: workloadName ?? 'default',
+        workload_namespace: workloadNamespace ?? 'default',
+        workload_uuid: workloadUUID ?? 'default',
+      });
 
-    const items = await this.get<any>(`/${PATH}?`.concat(`${path.toString()}`));
+      const items = await this.get<any>(
+        `/${PATH}?`.concat(`${path.toString()}`),
+      );
 
-    return items;
+      return items;
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**

@@ -28,6 +28,7 @@ class ServiceInstancesFetcher {
   private entity: Entity;
   private api: KomodorApi;
   private interval: number;
+  private isWorking: boolean;
   private cancellationMethod: (() => void) | undefined;
 
   /**
@@ -42,6 +43,7 @@ class ServiceInstancesFetcher {
       entity.metadata?.annotations?.intervalMs ?? '5000',
       10,
     );
+    this.isWorking = false;
   }
 
   public getServiceInstancesPeriodically(
@@ -50,6 +52,7 @@ class ServiceInstancesFetcher {
   ) {
     const run = async () => {
       try {
+        this.isWorking = true;
         const response = await this.api.getServiceInstances({
           workloadName:
             this.entity.metadata?.annotations?.[
@@ -66,7 +69,7 @@ class ServiceInstancesFetcher {
         });
         updateCallback(response);
       } catch (error) {
-        errorCallback(error);
+        errorCallback(`Details: ${JSON.stringify(error)}`);
       }
     };
 
@@ -76,7 +79,12 @@ class ServiceInstancesFetcher {
   public stopPeriodicFetching() {
     if (this.cancellationMethod) {
       this.cancellationMethod();
+      this.isWorking = false;
     }
+  }
+
+  public getIsWorking(): boolean {
+    return this.isWorking;
   }
 }
 
