@@ -19,15 +19,19 @@ export const fetchWithTimeout = async (
   timeout: number,
   options = {},
 ) => {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal,
-  });
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal,
+    });
 
-  clearTimeout(id);
+    clearTimeout(id);
 
-  return response;
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };

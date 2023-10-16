@@ -55,7 +55,17 @@ export class ServiceCache {
    * @param cache Data source from old caches. If not set, create an empty cache.
    */
   constructor(cache?: ServiceCache) {
-    this.cache = cache?.cache ?? new Map<string, ServiceCacheItem>();
+    this.cache = cache
+      ? new Map<string, ServiceCacheItem>(cache?.cache)
+      : new Map<string, ServiceCacheItem>();
+  }
+
+  /**
+   * Creates a map out of the current cache
+   * @returns Returns a new Map with the data from the current cache.
+   */
+  toMap(): Map<string, ServiceCacheItem> {
+    return new Map<string, ServiceCacheItem>(this.cache);
   }
 
   /**
@@ -149,13 +159,17 @@ export class ServiceCache {
     callback: (
       requestInfo: KomodorApiRequestInfo,
       responseInfo: Array<KomodorApiResponseInfo>,
-    ) => void,
+    ) => Promise<boolean>,
   ) {
-    this.cache.forEach((_value, key) => {
-      const items = this.cache.get(key)?.data.items || [];
-      items.forEach(item => {
-        callback(item.requestInfo, item.responseInfo);
-      });
-    });
+    for (const [_key, value] of this.cache.entries()) {
+      const items = value?.data.items || [];
+
+      for (let index = 0; index < items.length; index++) {
+        // This can happen when the callback throws so the iteration needs to stop
+        if (!callback(items[index].requestInfo, items[index].responseInfo)) {
+          break;
+        }
+      }
+    }
   }
 }

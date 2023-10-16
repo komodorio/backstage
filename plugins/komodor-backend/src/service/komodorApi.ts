@@ -74,27 +74,31 @@ export class KomodorApi
   async fetch(
     params: KomodorApiRequestInfo,
   ): Promise<KomodorApiResponseInfo[]> {
-    const headers = {
-      authorization: `Bearer ${this.apiKey}`,
-      method: 'POST',
-      ...this.options,
-    };
+    try {
+      const headers = {
+        authorization: `Bearer ${this.apiKey}`,
+        method: 'POST',
+        ...this.options,
+      };
 
-    const queryParams = new URLSearchParams({
-      workloadName: params.workloadName,
-      workloadNamespace: params.workloadNamespace,
-      workloadUUID: params.workloadUUID,
-    });
+      const queryParams = new URLSearchParams({
+        workloadName: params.workloadName,
+        workloadNamespace: params.workloadNamespace,
+        workloadUUID: params.workloadUUID,
+      });
 
-    const path = `${KOMODOR_API}?${queryParams.toString()}`; // Convert URLSearchParams to a string
-    const fetchURL = new URL(path, this.url);
+      const path = `${KOMODOR_API}?${queryParams.toString()}`; // Convert URLSearchParams to a string
+      const fetchURL = new URL(path, this.url);
 
-    const response = await fetchWithTimeout(
-      fetchURL.toString(),
-      this.timeout,
-      headers,
-    );
+      const response = await fetchWithTimeout(
+        fetchURL.toString(),
+        this.timeout,
+        headers,
+      );
 
-    return (await response.json()) as KomodorApiResponseInfo[];
+      return (await response.json()) as KomodorApiResponseInfo[];
+    } catch (error) {
+      throw error;
+    }
   }
 }

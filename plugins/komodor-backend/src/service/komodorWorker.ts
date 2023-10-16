@@ -20,6 +20,8 @@ import { CacheOptions, ServiceCache } from './serviceCache';
 
 const POLLING_INTERVAL = 5000;
 const CONSIDER_IRRELEVANT_DATA_INTERVAL = 30000;
+const KOMODOR_ERROR =
+  'An error occurred while fetching the data from Komodor service.';
 
 export interface KomodorWorkerInfo {
   apiKey: string;
@@ -52,27 +54,39 @@ export class KomodorWorker {
     response,
     cacheOptions: CacheOptions = this.cacheOptions,
   ) {
-    const queryParams = new URLSearchParams(request.query);
-    const params: KomodorApiRequestInfo = {
-      workloadName: queryParams.get('workload_name') ?? 'default',
-      workloadNamespace: queryParams.get('workload_namespace') ?? 'default',
-      workloadUUID: queryParams.get('workload_uuid') ?? 'default',
-    };
+    let data;
+    let status = 200;
 
-    const { shouldFetch } = cacheOptions;
-    const existingData = shouldFetch
-      ? this.cache.getDataItem(params)?.responseInfo
-      : undefined;
+    try {
+      const queryParams = new URLSearchParams(request.query);
+      const params: KomodorApiRequestInfo = {
+        workloadName: queryParams.get('workload_name') ?? 'default',
+        workloadNamespace: queryParams.get('workload_namespace') ?? 'default',
+        workloadUUID: queryParams.get('workload_uuid') ?? 'default',
+      };
 
-    const data =
-      shouldFetch && existingData ? existingData : await this.api.fetch(params);
+      const { shouldFetch } = cacheOptions;
+      const existingData = shouldFetch
+        ? this.cache.getDataItem(params)?.responseInfo
+        : undefined;
 
-    // Stores the fresh data as long as the data the cache is in use.
-    if (shouldFetch) {
-      this.cache.setDataItem(params, data);
+      data =
+        shouldFetch && existingData
+          ? existingData
+          : await this.api.fetch(params);
+
+      // Stores the fresh data as long as the data the cache is in use.
+      if (shouldFetch) {
+        this.cache.setDataItem(params, data);
+      }
+    } catch (error) {
+      data = KOMODOR_ERROR;
+
+      // Internal server error
+      status = 500;
     }
 
-    return await response.json(data);
+    return await response.status(status).json(data);
   }
 
   async start() {
@@ -87,18 +101,30 @@ export class KomodorWorker {
     while (!this.signal) {
       try {
         tempCache.forEach(async (requestInfo, _responseItem) => {
-          const lastUpdateRequest =
-            this.cache.getDataItem(requestInfo)?.lastUpdateRequest;
-          const irrelevant =
-            lastUpdateRequest !== undefined &&
-            Date.now() - lastUpdateRequest >= CONSIDER_IRRELEVANT_DATA_INTERVAL;
+          let result: boolean = true;
 
-          if (irrelevant) {
-            this.cache.removeDataItem(requestInfo);
+          try {
+            const lastUpdateRequest =
+              this.cache.getDataItem(requestInfo)?.lastUpdateRequest;
+            const irrelevant =
+              lastUpdateRequest !== undefined &&
+              Date.now() - lastUpdateRequest >=
+                CONSIDER_IRRELEVANT_DATA_INTERVAL;
+
+            if (irrelevant) {
+              this.cache.removeDataItem(requestInfo);
+            }
+
+            const responseInfo = await this.api.fetch(requestInfo);
+            this.cache.setDataItem(requestInfo, responseInfo);
+          } catch (error) {
+            this.stopUpdatingCache();
+            result = false;
+
+            throw error;
           }
 
-          const responseInfo = await this.api.fetch(requestInfo);
-          this.cache.setDataItem(requestInfo, responseInfo);
+          return result;
         });
       } catch (error) {
         this.stopUpdatingCache();
@@ -109,6 +135,8 @@ export class KomodorWorker {
   }
 
   stopUpdatingCache() {
+    // This does not happen immediately as if there's any fetch request pending,
+    // all the data in the cache should be fetched before
     this.signal = true;
   }
 }
