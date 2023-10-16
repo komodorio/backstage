@@ -1,6 +1,6 @@
 # komodor Plugin
 
-<img src="./src/assets/screenshot-1.png">
+<img src="./src/assets/screenshot_normal.png">
 
 ## Setup
 
@@ -58,8 +58,7 @@ const serviceEntityPage = (
     </EntityLayout.Route>
 ```
 
-4. Add configs for the backend in your `app-config.yaml`. The full instructions
-   can be found in the README file of the backend project.
+4. Follow the backend instructions which can be found in the README file of the backend project.
 
 ## Run
 
