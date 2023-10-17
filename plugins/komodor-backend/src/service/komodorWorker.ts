@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { ResponseError } from '@backstage/errors';
 import { KomodorApiRequestInfo } from '../types/types';
 import { KomodorApi } from './komodorApi';
 import { CacheOptions, ServiceCache } from './serviceCache';
@@ -80,10 +81,14 @@ export class KomodorWorker {
         this.cache.setDataItem(params, data);
       }
     } catch (error) {
-      data = KOMODOR_ERROR;
-
-      // Internal server error
-      status = 500;
+      if (error instanceof ResponseError) {
+        data = error.cause ?? KOMODOR_ERROR;
+        status = error.body.response.statusCode;
+      } else {
+        data = KOMODOR_ERROR;
+        // Internal server error
+        status = 500;
+      }
     }
 
     return await response.status(status).json(data);

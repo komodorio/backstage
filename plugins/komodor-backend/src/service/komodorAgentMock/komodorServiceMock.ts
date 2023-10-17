@@ -120,7 +120,7 @@ cache.set('my_workload_uuidB', {
 });
 
 const server = http.createServer((req, res) => {
-  if (req.method === 'POST' && req.url?.startsWith('/workload')) {
+  if (req.method === 'GET' && req.url?.startsWith('/workload')) {
     const { query } = url.parse(req.url, true);
     const {
       workloadName = 'default',

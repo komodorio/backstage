@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { NotImplementedError } from '@backstage/errors';
+import { NotImplementedError, ResponseError } from '@backstage/errors';
 import { fetchWithTimeout } from './fetchHelper';
 import {
   KomodorApiRequestInfo,
@@ -77,7 +77,7 @@ export class KomodorApi
     try {
       const headers = {
         authorization: `Bearer ${this.apiKey}`,
-        method: 'POST',
+        method: 'GET',
         ...this.options,
       };
 
@@ -95,6 +95,10 @@ export class KomodorApi
         this.timeout,
         headers,
       );
+
+      if (response.status !== 200) {
+        throw ResponseError.fromResponse(response);
+      }
 
       return (await response.json()) as KomodorApiResponseInfo[];
     } catch (error) {
