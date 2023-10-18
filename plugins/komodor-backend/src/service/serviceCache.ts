@@ -39,7 +39,7 @@ export interface CacheOptions {
   shouldFetch: boolean;
 
   /**
-   * Should the cache be updated constantly.
+   * Should the cache be updated constantly in the backgroung.
    */
   shouldUpdate: boolean;
 }
@@ -139,26 +139,30 @@ export class ServiceCache {
     const uuid = params.workloadUUID;
     if (this.cache.has(uuid)) {
       const items = this.cache.get(uuid)?.data.items || [];
-      for (let index = 0; index < items.length; index++) {
-        const currentItem = items[index];
-        if (
+      const indexToRemove = items.findIndex(
+        currentItem =>
           currentItem.requestInfo.workloadName === params.workloadName &&
-          currentItem.requestInfo.workloadNamespace === params.workloadNamespace
-        ) {
-          items.splice(index, 1);
-          if (items.length === 0) {
-            this.cache.delete(uuid);
-          }
-          return true;
+          currentItem.requestInfo.workloadNamespace ===
+            params.workloadNamespace,
+      );
+
+      if (indexToRemove !== -1) {
+        items.splice(indexToRemove, 1);
+        if (items.length === 0) {
+          this.cache.delete(uuid);
         }
+
+        return true;
       }
     }
+
     return false;
   }
 
   /**
-   * Goes through all the items in all the key-value pairs in the map.
-   * @param callback Function to call with an item loaded.
+   * Goes through all the items in all the entries in the map.
+   * @param callback Function to call with an item loaded. It should return false
+   * only if a loop break is required, for example, if an exception is raised in a callback.
    */
   forEach(
     callback: (

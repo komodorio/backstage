@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+/**
+ * Fetches data, throws if the given timeout reached.
+ * @param resource URL to use for the fetch.
+ * @param timeout
+ * @param options Additional headers
+ * @returns
+ */
 export const fetchWithTimeout = async (
   resource: string,
   timeout: number,

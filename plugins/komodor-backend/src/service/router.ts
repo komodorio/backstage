@@ -26,9 +26,14 @@ export interface RouterOptions {
   config: Config;
 }
 
+/**
+ * Creates a Komodor worker with a given config.
+ * @param config
+ * @returns
+ */
 export function createKomodorWorker(config: Config): KomodorWorker {
   /**
-   * Parameters that will throw intentionally if not configured properly.
+   * Parameters that will cause an exception intentionally if not configured properly.
    * They are mandatory!
    */
   const apiKey: string = config.getString('komodor.apiKey');
