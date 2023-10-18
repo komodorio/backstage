@@ -121,9 +121,8 @@ export class KomodorWorker {
             }
 
             const responseInfo = await this.api.fetch(requestInfo);
-            this.cache.setDataItem(requestInfo, responseInfo);
+            this.cache.setDataItem(requestInfo, responseInfo, false);
           } catch (error) {
-            this.stopUpdatingCache();
             result = false;
 
             throw error;

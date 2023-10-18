@@ -90,18 +90,23 @@ export class ServiceCache {
    * Sets the exact item's data from the cache, according to the parameters, to the given data.
    * @param params Request's parameters.
    * @param data The value
+   * @param setDate Sets the date if desired.
    * @returns True if succeeded.
    */
   setDataItem(
     params: KomodorApiRequestInfo,
     data: Array<KomodorApiResponseInfo>,
+    setDate: boolean = true,
   ) {
     const uuid = params.workloadUUID;
     if (this.cache.has(uuid)) {
       const item = this.getDataItem(params);
       if (item) {
         item.responseInfo = data;
-        item.lastUpdateRequest = Date.now();
+
+        if (setDate) {
+          item.lastUpdateRequest = Date.now();
+        }
       } else {
         this.cache.get(uuid)?.data.items.push({
           requestInfo: params,
