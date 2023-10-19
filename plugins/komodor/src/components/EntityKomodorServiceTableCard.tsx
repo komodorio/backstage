@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 import { Table, TableColumn } from '@backstage/core-components';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ServiceInstanceInfo, ServiceStatus } from '../types/types';
+import React, { useEffect, useState } from 'react';
+import { ServiceStatus } from '../types/types';
 import { useEntity } from '@backstage/plugin-catalog-react';
-import { useServiceInstancesFetcher, komodorApiRef } from '../api';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
-import { useApi } from '@backstage/core-plugin-api';
 import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
 import { EntityKomodorServiceWarningCard } from './warnings';
+import { useServiceInstancesFetcher } from '../hooks';
 
 const columns: TableColumn[] = [
   {
@@ -53,88 +52,69 @@ const columns: TableColumn[] = [
 
 export function EntityKomodorServiceTableCard() {
   const { entity } = useEntity();
-  const api = useApi(komodorApiRef);
-  const { fetcher } = useServiceInstancesFetcher(entity, api);
-  const [apiError, setApiError] = useState('');
-
-  const [serviceInstances, setServiceInstances] = useState<
-    ServiceInstanceInfo[] | null
-  >(null);
-
-  const updateServiceInstances = useCallback(
-    (serviceInstancesFetch: ServiceInstanceInfo[]) => {
-      if (apiError) {
-        setApiError('');
-      }
-
-      setServiceInstances(serviceInstancesFetch);
-    },
-    [apiError, setApiError, setServiceInstances],
-  );
-
-  const onError = useCallback(
-    (error: string) => {
-      if (fetcher.getIsWorking()) {
-        if (apiError !== error) {
-          setApiError(error);
-        }
-      }
-    },
-    [fetcher, apiError, setApiError],
-  );
+  const { objects, error } = useServiceInstancesFetcher(entity);
+  const [lastObjects, setLastObjects] = useState(objects);
 
   useEffect(() => {
-    if (isKomodorAvailable(entity) && fetcher !== undefined) {
-      // Each time the component is mounted, the data is fetched (constantly).
-      fetcher.getServiceInstancesPeriodically(updateServiceInstances, onError);
+    if (objects) {
+      setLastObjects(objects);
     }
-
-    return () => {
-      if (fetcher !== undefined) {
-        if (fetcher.getIsWorking()) {
-          fetcher.stopPeriodicFetching();
-        }
-      }
-    };
-  }, [fetcher, onError, updateServiceInstances, entity]);
+  }, [objects]);
 
   if (!isKomodorAvailable(entity)) {
     return <MissingAnnotationEmptyState annotation={KOMODOR_ID_ANNOTATION} />;
   }
 
-  const data = (): {
+  const mapData = (): {
     clusterName: string;
     isHealthy: boolean;
     workloadUUID: string;
     icon: string;
   }[] => {
-    if (serviceInstances === null) return [];
-    return serviceInstances.map(instance => {
-      return {
-        clusterName: instance.clusterName,
-        isHealthy: instance.status === ServiceStatus.Healthy,
-        workloadUUID: instance.workloadUUID,
-        icon: '■',
-      };
-    });
+    if (objects === null && objects === undefined) {
+      return [];
+    } else if (error) {
+      return (
+        lastObjects?.map(instance => {
+          return {
+            clusterName: instance.clusterName,
+            isHealthy: instance.status === ServiceStatus.Healthy,
+            workloadUUID: instance.workloadUUID,
+            icon: '■',
+          };
+        }) ?? []
+      );
+    }
+    return (
+      objects?.map(instance => {
+        return {
+          clusterName: instance.clusterName,
+          isHealthy: instance.status === ServiceStatus.Healthy,
+          workloadUUID: instance.workloadUUID,
+          icon: '■',
+        };
+      }) ?? []
+    );
   };
+
+  const data = mapData();
 
   return (
     <>
-      {apiError ? (
+      {error ? (
         <EntityKomodorServiceWarningCard
           title="An error occurred in the server"
-          message={apiError}
+          message={error}
         />
       ) : (
         <></>
       )}
       <Table
         options={{ paging: false }}
-        data={data()}
+        data={data}
         columns={columns}
         title="Service Instances"
-        isLoading={serviceInstances === null}
+        isLoading={objects === null}
       />
     </>
   );
