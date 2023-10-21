@@ -41,12 +41,12 @@ describe('createRouter', () => {
     jest.resetAllMocks();
   });
 
-  describe('GET /join', () => {
-    it('returns ok', async () => {
-      const response = await request(app).get('/join');
+  describe('GET /ping', () => {
+    it('returns hello', async () => {
+      const response = await request(app).get('/ping');
 
       expect(response.status).toEqual(200);
-      expect(response.body).toEqual({ status: 'ok' });
+      expect(response.body).toEqual({ message: 'hello' });
     });
   });
 });
