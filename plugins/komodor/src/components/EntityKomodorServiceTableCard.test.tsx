@@ -14,17 +14,44 @@
  * limitations under the License.
  */
 import React from 'react';
-import { render, screen } from '@testing-library/react';
 import { EntityKomodorServiceTableCard } from './EntityKomodorServiceTableCard';
+import { EntityProvider } from '@backstage/plugin-catalog-react';
+import { TestApiProvider, renderInTestApp } from '@backstage/test-utils';
+import { KomodorApi, komodorApiRef } from '../api';
+import { ServiceInstanceInfo } from '../types/types';
 
 describe('EntityKomodorServiceTableCard', () => {
-  it('renders the user table', async () => {
-    render(<EntityKomodorServiceTableCard />);
+  const entity = {
+    apiVersion: 'v1',
+    kind: 'Component',
+    metadata: {
+      name: 'software',
+      description: 'This is the description',
+      annotations: {
+        'komodor.com/komodor-entity-id': '123efa3789ff0dc',
+        wokloadName: 'my_workload_name',
+        workloadNamespace: 'my_workload_namespace',
+        workloadUUID: 'my_workload_uuid',
+      },
+    },
+  };
 
-    // Wait for the table to render
-    const table = await screen.findByRole('table');
+  const komodorApi: Partial<KomodorApi> = {
+    getServiceInstances: () =>
+      Promise.resolve([
+        { clusterName: 'cname1', workloadUUID: 'uuid1', status: 'Healthy' },
+      ] as ServiceInstanceInfo[]),
+  };
 
-    // Assert that the table contains the expected user data
-    expect(table).toBeInTheDocument();
+  it('Show the table', async () => {
+    const { getByText } = await renderInTestApp(
+      <TestApiProvider apis={[[komodorApiRef, komodorApi]]}>
+        <EntityProvider entity={entity}>
+          <EntityKomodorServiceTableCard />
+        </EntityProvider>
+      </TestApiProvider>,
+    );
+
+    expect(getByText('uuid1')).toBeInTheDocument();
   });
 });
