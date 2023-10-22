@@ -19,7 +19,7 @@ import { EntityKomodorServiceWarningCard } from './EntityKomodorServiceWarningCa
 
 describe('Show alert', () => {
   it('renders the user table', async () => {
-    render(<EntityKomodorServiceWarningCard />);
+    render(<EntityKomodorServiceWarningCard title="mock" message="message" />);
 
     // Wait for the table to render
     const table = await screen.findByRole('alert');
