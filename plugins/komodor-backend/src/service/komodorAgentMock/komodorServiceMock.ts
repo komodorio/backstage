@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-const http = require('http');
-const url = require('url');
+const express = require('express');
 
+const app = express();
 const port = 7008;
 
 const cache = new Map();
@@ -119,37 +119,33 @@ cache.set('my_workload_uuidB', {
   },
 });
 
-const server = http.createServer((req, res) => {
-  if (req.method === 'GET' && req.url?.startsWith('/workload')) {
-    const { query } = url.parse(req.url, true);
-    const {
-      workloadName = 'default',
-      workloadNamespace = 'default',
-      workloadUUID = 'default',
-    } = query;
+app.get('/workload', (req, res) => {
+  const {
+    workloadName = 'default',
+    workloadNamespace = 'default',
+    workloadUUID = 'default',
+  } = req.query;
+  const dataPerUUID = cache.get(workloadUUID);
+  let requestedData;
 
-    const dataPerUUID = cache.get(workloadUUID);
-    let requestedData;
-
-    if (dataPerUUID) {
-      requestedData = dataPerUUID.data.items.find(
-        item =>
-          item.workloadName === workloadName &&
-          item.workloadNamespace === workloadNamespace,
-      );
-    }
-
-    const status = requestedData ? 200 : 204;
-    const responseJSON = requestedData ? requestedData.serviceInstances : '';
-
-    res.writeHead(status, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(responseJSON));
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
+  if (dataPerUUID) {
+    requestedData = dataPerUUID.data.items.find(
+      item =>
+        item.workloadName === workloadName &&
+        item.workloadNamespace === workloadNamespace,
+    );
   }
+
+  const status = requestedData ? 200 : 204;
+  const responseJSON = requestedData ? requestedData.serviceInstances : '';
+
+  res.status(status).json(responseJSON);
 });
 
-server.listen(port, () => {
+app.get('*', (req, res) => {
+  res.status(404).json({ message: 'Not Found' });
+});
+
+app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
