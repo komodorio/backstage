@@ -18,7 +18,7 @@
  * A base class for KomodorApi requests.
  */
 export interface KomodorApiRequestInfoBase {
-  workloadUUID: string;
+  workload_uuid?: string;
   options?: {};
 }
 
@@ -26,15 +26,15 @@ export interface KomodorApiRequestInfoBase {
  * Contains all the info of komodorApi requests.
  */
 export interface KomodorApiRequestInfo extends KomodorApiRequestInfoBase {
-  workloadName: string;
-  workloadNamespace: string;
+  workload_name: string;
+  workload_namespace: string;
 }
 
 /**
  * A base class for KomodorApi responses.
  */
 export interface KomodorApiResponseInfoBase {
-  workloadUUID: string;
+  workload_uuid: string;
   options?: {};
 }
 
@@ -42,6 +42,6 @@ export interface KomodorApiResponseInfoBase {
  * Contains all the info of komodorApi responses.
  */
 export interface KomodorApiResponseInfo extends KomodorApiResponseInfoBase {
-  clusterName: string;
+  cluster_name: string;
   status: string;
 }

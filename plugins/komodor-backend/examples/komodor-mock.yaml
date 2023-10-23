@@ -5,9 +5,10 @@ metadata:
   title: komodor entity
   description: Mock for testing Komodor
   annotations:
-    komodor.com/komodor-entity-id: 123efa3789ff0dc 
+    komodor.com/komodor-entity-id: entity-id 
     komodor.com/workloadName: my_workload_name1A
     komodor.com/workloadNamespace: my_workload_namespace1A
+    # Optional. If set, ignores the name and the namespace.
     komodor.com/workloadUUID: my_workload_uuidA
 spec:
   type: website

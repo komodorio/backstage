@@ -15,9 +15,9 @@
  */
 
 import { ResponseError } from '@backstage/errors';
-import { KomodorApiRequestInfo } from '../types/types';
+import { KomodorApiRequestInfo, KomodorApiResponseInfo } from '../types/types';
 import { KomodorApi } from './komodorApi';
-import { CacheOptions, ServiceCache } from './serviceCache';
+import { CacheOptions, Workload, WorkloadCache } from './serviceCache';
 
 const POLLING_INTERVAL = 5000;
 const CONSIDER_IRRELEVANT_DATA_INTERVAL = 30000;
@@ -52,7 +52,7 @@ const defaultCacheOptions: CacheOptions = {
  * Fetching data from komodor, managing the cache
  */
 export class KomodorWorker {
-  private readonly cache: ServiceCache;
+  private readonly cache: WorkloadCache;
   private readonly api: KomodorApi;
   private readonly cacheOptions: CacheOptions;
   private signal: boolean;
@@ -61,7 +61,7 @@ export class KomodorWorker {
     const { apiKey, url, cacheOptions } = workerInfo;
 
     this.api = new KomodorApi({ apiKey, url });
-    this.cache = new ServiceCache();
+    this.cache = new WorkloadCache();
     this.cacheOptions = cacheOptions ?? defaultCacheOptions;
     this.signal = false;
   }
@@ -78,36 +78,68 @@ export class KomodorWorker {
     response,
     cacheOptions: CacheOptions = this.cacheOptions,
   ) {
-    let data;
+    let data: KomodorApiResponseInfo[] | string | Error;
     let status = 200;
 
     try {
       const queryParams = new URLSearchParams(request.query);
       const params: KomodorApiRequestInfo = {
-        workloadName:
+        workload_name:
           queryParams.get(API_QUERY_PARAMS_WORKLOAD_NAME) ??
           API_QUERY_PARAMS_DEFAULT_VALUE,
-        workloadNamespace:
+        workload_namespace:
           queryParams.get(API_QUERY_PARAMS_WORKLOAD_NAMESPACE) ??
           API_QUERY_PARAMS_DEFAULT_VALUE,
-        workloadUUID:
-          queryParams.get(API_QUERY_PARAMS_WORKLOAD_UUID) ??
-          API_QUERY_PARAMS_DEFAULT_VALUE,
+        workload_uuid: queryParams.get(API_QUERY_PARAMS_WORKLOAD_UUID) ?? '',
       };
 
+      console.log(`Params: ${JSON.stringify(params)}`);
       const { shouldFetch } = cacheOptions;
-      const existingData = shouldFetch
-        ? this.cache.getDataItem(params)?.responseInfo
-        : undefined;
 
+      // Fetched the data from the cache, whether it's a single workload or multiple.
+      let existingData: Workload[] | undefined;
+
+      if (shouldFetch) {
+        if (queryParams.has(API_QUERY_PARAMS_WORKLOAD_UUID)) {
+          const workload = this.cache.getWorkloadByUUID(
+            params?.workload_uuid ?? '',
+          );
+
+          if (workload) {
+            existingData = [workload];
+          }
+        } else {
+          existingData = this.cache.getWorkloads(
+            workload =>
+              workload.name === params.workload_name &&
+              workload.namespace === params.workload_namespace,
+          );
+        }
+      }
+      // Fetches the data right from Komodor or at least from the cache, after formatting it
       data =
         shouldFetch && existingData
-          ? existingData
+          ? existingData.map(function (workload) {
+              return {
+                workload_uuid: workload.uuid,
+                cluster_name: workload.clusterName,
+                status: workload.status,
+              };
+            })
           : await this.api.fetch(params);
 
-      // Stores the fresh data as long as the data the cache is in use.
-      if (shouldFetch) {
-        this.cache.setDataItem(params, data);
+      // Why not updating the cache with some fresh data ;)?
+      if (!(existingData && shouldFetch)) {
+        data.forEach(workload => {
+          const item = this.cache.getWorkloadByUUID(workload.workload_uuid);
+
+          if (item) {
+            item.clusterName = workload.cluster_name;
+            item.status = workload.status;
+
+            this.cache.setWorkload(item);
+          }
+        });
       }
     } catch (error) {
       if (error instanceof ResponseError) {
@@ -133,29 +165,45 @@ export class KomodorWorker {
   }
 
   private async startUpdatingCache() {
-    const tempCache = new ServiceCache(this.cache);
+    const tempCache = new WorkloadCache(this.cache);
 
     while (!this.signal) {
       try {
-        tempCache.forEach(async (requestInfo, _responseItem) => {
+        tempCache.forEach(async workload => {
           let result: boolean = true;
 
           try {
-            const lastUpdateRequest =
-              this.cache.getDataItem(requestInfo)?.lastUpdateRequest;
-
             // Removes items that haven't been requested for a long time.
             const irrelevant =
-              lastUpdateRequest !== undefined &&
-              Date.now() - lastUpdateRequest >=
-                CONSIDER_IRRELEVANT_DATA_INTERVAL;
+              Date.now() - workload.lastUpdateRequest >=
+              CONSIDER_IRRELEVANT_DATA_INTERVAL;
 
             if (irrelevant) {
-              this.cache.removeDataItem(requestInfo);
+              this.cache.removeWorkload(workload.uuid);
             }
 
-            const responseInfo = await this.api.fetch(requestInfo);
-            this.cache.setDataItem(requestInfo, responseInfo, false);
+            const data: KomodorApiResponseInfo[] = await this.api.fetch({
+              workload_uuid: workload.uuid,
+              workload_name: workload.name,
+              workload_namespace: workload.namespace,
+            });
+
+            const updatedWorkload: Workload | undefined = data
+              .map(function (response) {
+                return {
+                  uuid: workload.uuid,
+                  name: workload.name,
+                  namespace: workload.namespace,
+                  clusterName: response.cluster_name,
+                  status: response.status,
+                  lastUpdateRequest: Date.now(),
+                };
+              })
+              .at(0);
+
+            if (updatedWorkload) {
+              this.cache.setWorkload(updatedWorkload, false);
+            }
           } catch (error) {
             result = false;
 

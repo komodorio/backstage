@@ -71,7 +71,7 @@ export async function createRouter(
   router.get('/ping', (req, res) => {
     res.status(200).json({ message: 'hello' });
   });
-  router.get('/services', (req, res) => {
+  router.get('/workload', (req, res) => {
     komodorWorker.getServiceInfo(req, res);
   });
 

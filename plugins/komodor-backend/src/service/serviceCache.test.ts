@@ -1,4 +1,4 @@
-import { ServiceCache, ServiceCacheItem } from './serviceCache';
+import { WorkloadCache, Workload } from './serviceCache';
 /*
  * Copyright 2023 The Backstage Authors
  *
@@ -15,179 +15,150 @@ import { ServiceCache, ServiceCacheItem } from './serviceCache';
  * limitations under the License.
  */
 
-describe('ServiceCache', () => {
-  let serviceCache: ServiceCache;
+describe('WorkloadCache', () => {
+  let workloadCache: WorkloadCache;
 
   beforeEach(() => {
-    serviceCache = new ServiceCache();
+    workloadCache = new WorkloadCache();
   });
 
   it('should initialize with the provided cache', () => {
-    // Notice these do not share the same reference!
-    expect(serviceCache.toMap()).toEqual(new Map<string, ServiceCacheItem>());
+    // Notice these two do not share the same reference!
+    expect(workloadCache.toMap()).toEqual(new Map<string, Workload>());
   });
 
   it('should return undefined because the cache is empty', () => {
+    expect(workloadCache.getWorkloadByUUID('uuid1')).toBeUndefined();
+  });
+
+  it('should return [] because the cache is empty', () => {
     const params = {
-      workloadUUID: 'uuid1',
-      workloadName: 'name1',
-      workloadNamespace: 'namespace1',
+      name: 'name1',
+      namespace: 'namespace1',
     };
 
-    const mockData = [
-      {
-        requestInfo: params,
-        responseInfo: [
-          {
-            workloadUUID: 'uuid1',
-            clusterName: 'cname1',
-            status: 'Healthy',
-          },
-        ],
-        lastUpdateRequest: Date.now(),
-      },
-    ];
-
-    const dataItem = serviceCache.getDataItem(params);
-    expect(dataItem).toEqual(undefined);
+    const dataItem = workloadCache.getWorkloads(
+      workload =>
+        workload.name === params.name &&
+        workload.namespace === params.namespace,
+    );
+    expect(dataItem).toEqual([]);
   });
 
   it('should set data item in cache', () => {
-    const params = {
-      workloadUUID: 'uuid2',
-      workloadName: 'name2',
-      workloadNamespace: 'namespace2',
+    const workload: Workload = {
+      uuid: 'uuid2',
+      name: 'name2',
+      namespace: 'namespace2',
+      clusterName: 'cname2',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
     };
-    const responseData = [
-      {
-        workloadUUID: 'uuid2',
-        clusterName: 'cname2',
-        status: 'Unhealthy',
-      },
-    ];
 
-    serviceCache.setDataItem(params, responseData);
+    workloadCache.setWorkload(workload);
 
-    const cachedData = serviceCache.toMap().get('uuid2');
+    const cachedData = workloadCache.toMap().get('uuid2');
     expect(cachedData).not.toBeUndefined();
-    expect(cachedData?.data.items).toHaveLength(1);
-    expect(cachedData?.data.items[0].requestInfo).toEqual(params);
-    expect(cachedData?.data.items[0].responseInfo).toEqual(responseData);
+    expect(cachedData).toEqual(workload);
   });
 
-  it('should return data item if it exists', () => {
-    const params = {
-      workloadUUID: 'uuid1',
-      workloadName: 'name1',
-      workloadNamespace: 'namespace1',
+  it('should return workloads by name and namespace if exist', () => {
+    const firstWorkload: Workload = {
+      uuid: 'uuid1',
+      name: 'name1',
+      namespace: 'namespace1',
+      clusterName: 'cname1',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
     };
 
-    const mockData = [
-      {
-        requestInfo: params,
-        responseInfo: [
-          {
-            workloadUUID: 'uuid1',
-            clusterName: 'cname1',
-            status: 'Healthy',
-          },
-        ],
-        lastUpdateRequest: Date.now(),
-      },
-    ];
+    const secondWorkload: Workload = {
+      uuid: 'uuid2',
+      name: 'name1',
+      namespace: 'namespace1',
+      clusterName: 'cname2',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
+    };
 
-    serviceCache.setDataItem(params, mockData[0].responseInfo);
+    workloadCache.setWorkload(firstWorkload);
+    workloadCache.setWorkload(secondWorkload);
 
-    const dataItem = serviceCache.getDataItem(params);
-    expect(dataItem).toEqual(mockData[0]);
+    const result = workloadCache.getWorkloads(
+      workload =>
+        workload.name === firstWorkload.name &&
+        workload.namespace === firstWorkload.namespace,
+    );
+
+    expect(result[0]).toEqual(firstWorkload);
+    expect(result[1]).toEqual(secondWorkload);
+  });
+
+  it('should return workload by UUID if it exists', () => {
+    const workload: Workload = {
+      uuid: 'uuid1',
+      name: 'name1',
+      namespace: 'namespace1',
+      clusterName: 'cname1',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
+    };
+
+    workloadCache.setWorkload(workload);
+
+    const result = workloadCache.getWorkloadByUUID(workload.uuid);
+    expect(result).toEqual(workload);
   });
 
   it('should remove data item from cache', () => {
-    const params = {
-      workloadUUID: 'uuid3',
-      workloadName: 'name3',
-      workloadNamespace: 'namespace3',
+    const workload: Workload = {
+      uuid: 'uuid1',
+      name: 'name1',
+      namespace: 'namespace1',
+      clusterName: 'cname1',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
     };
-    const responseData = [
-      {
-        workloadUUID: 'uuid3',
-        clusterName: 'cname3',
-        status: 'Healthy',
-      },
-    ];
 
-    serviceCache.setDataItem(params, responseData);
-    const removed = serviceCache.removeDataItem(params);
+    workloadCache.setWorkload(workload);
+    const removed = workloadCache.removeWorkload(workload.uuid);
     expect(removed).toBe(true);
-    expect(serviceCache.toMap().has('uuid3')).toBe(false);
+    expect(workloadCache.toMap().has(workload.uuid)).toBe(false);
   });
 
   it('should not remove non-existing data item from cache', () => {
-    const params = {
-      workloadUUID: 'nonExistingUUID',
-      workloadName: 'name4',
-      workloadNamespace: 'namespace4',
-    };
-
-    const removed = serviceCache.removeDataItem(params);
+    const removed = workloadCache.removeWorkload('uuid0');
     expect(removed).toBe(false);
   });
 
   it('should iterate over all items in the cache', async () => {
-    const firstParams = {
-      workloadUUID: 'uuid5',
-      workloadName: 'name5',
-      workloadNamespace: 'namespace5',
+    const firstWorkload: Workload = {
+      uuid: 'uuid1',
+      name: 'name1',
+      namespace: 'namespace1',
+      clusterName: 'cname1',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
     };
 
-    const secondParams = {
-      workloadUUID: 'uuid6',
-      workloadName: 'name6',
-      workloadNamespace: 'namespace6',
+    const secondWorkload: Workload = {
+      uuid: 'uuid2',
+      name: 'name1',
+      namespace: 'namespace1',
+      clusterName: 'cname2',
+      status: 'Unhealthy',
+      lastUpdateRequest: Date.now(),
     };
 
-    const items = [
-      {
-        requestInfo: firstParams,
-        responseInfo: [
-          {
-            workloadUUID: 'uuid5',
-            clusterName: 'cname5',
-            status: 'Unhealthy',
-          },
-        ],
-        lastUpdateRequest: Date.now(),
-      },
-      {
-        requestInfo: secondParams,
-        responseInfo: [
-          {
-            workloadUUID: 'uuid6',
-            clusterName: 'cname6',
-            status: 'Healthy',
-          },
-        ],
-        lastUpdateRequest: Date.now(),
-      },
-    ];
+    workloadCache.setWorkload(firstWorkload);
+    workloadCache.setWorkload(secondWorkload);
 
-    serviceCache.setDataItem(firstParams, items[0].responseInfo);
-    serviceCache.setDataItem(secondParams, items[1].responseInfo);
-
-    const callback = jest.fn();
-    await serviceCache.forEach(callback);
+    const callback = jest.fn(async _workload => true);
+    await workloadCache.forEach(callback);
 
     // Ensure the callback was called for each item
     expect(callback).toHaveBeenCalledTimes(2);
-    expect(callback).toHaveBeenNthCalledWith(
-      1,
-      items[0].requestInfo,
-      items[0].responseInfo,
-    );
-    expect(callback).toHaveBeenNthCalledWith(
-      2,
-      items[1].requestInfo,
-      items[1].responseInfo,
-    );
+    expect(callback).toHaveBeenNthCalledWith(1, firstWorkload);
+    expect(callback).toHaveBeenNthCalledWith(2, secondWorkload);
   });
 });
