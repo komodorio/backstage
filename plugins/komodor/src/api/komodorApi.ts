@@ -15,14 +15,17 @@
  */
 
 import { createApiRef } from '@backstage/core-plugin-api';
-import { ServiceDetailsRequestInfo, ServiceInstanceInfo } from '../types/types';
+import {
+  WorkloadDetailsRequestInfo,
+  WorkloadInstanceInfo,
+} from '../types/types';
 
 export const komodorApiRef = createApiRef<KomodorApi>({
   id: 'plugin.komodor.service',
 });
 
 export interface KomodorApi {
-  getServiceInstances(
-    info: ServiceDetailsRequestInfo,
-  ): Promise<ServiceInstanceInfo[]>;
+  getWorkloadInstances(
+    info: WorkloadDetailsRequestInfo,
+  ): Promise<WorkloadInstanceInfo[]>;
 }

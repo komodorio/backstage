@@ -15,12 +15,12 @@
  */
 import { Table, TableColumn } from '@backstage/core-components';
 import React, { useEffect, useState } from 'react';
-import { ServiceStatus } from '../types/types';
+import { WorkloadStatus } from '../types/types';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
 import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
 import { EntityKomodorServiceWarningCard } from './warnings';
-import { useServiceInstancesFetcher } from '../hooks';
+import { useWorkloadInstancesFetcher } from '../hooks';
 
 const columns: TableColumn[] = [
   {
@@ -52,7 +52,7 @@ const columns: TableColumn[] = [
 
 export function EntityKomodorServiceTableCard() {
   const { entity } = useEntity();
-  const { objects, error } = useServiceInstancesFetcher(entity);
+  const { objects, error } = useWorkloadInstancesFetcher(entity);
   const [lastObjects, setLastObjects] = useState(objects);
 
   useEffect(() => {
@@ -77,9 +77,9 @@ export function EntityKomodorServiceTableCard() {
       return (
         lastObjects?.map(instance => {
           return {
-            clusterName: instance.clusterName,
-            isHealthy: instance.status === ServiceStatus.Healthy,
-            workloadUUID: instance.workloadUUID,
+            clusterName: instance.cluster_name,
+            isHealthy: instance.status === WorkloadStatus.Healthy,
+            workloadUUID: instance.workload_uuid,
             icon: '■',
           };
         }) ?? []
@@ -88,9 +88,9 @@ export function EntityKomodorServiceTableCard() {
     return (
       objects?.map(instance => {
         return {
-          clusterName: instance.clusterName,
-          isHealthy: instance.status === ServiceStatus.Healthy,
-          workloadUUID: instance.workloadUUID,
+          clusterName: instance.cluster_name,
+          isHealthy: instance.status === WorkloadStatus.Healthy,
+          workloadUUID: instance.workload_uuid,
           icon: '■',
         };
       }) ?? []
@@ -113,7 +113,7 @@ export function EntityKomodorServiceTableCard() {
         options={{ paging: false }}
         data={data}
         columns={columns}
-        title="Service Instances"
+        title="Workload Instances"
         isLoading={objects === null}
       />
     </>

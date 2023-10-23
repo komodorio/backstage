@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-export enum ServiceStatus {
+export enum WorkloadStatus {
   Healthy = 'Healthy',
   Unhealthy = 'Unhealthy',
 }
 
-export interface ServiceDetailsRequestInfo {
-  workloadName: string;
-  workloadNamespace: string;
-  workloadUUID?: string;
+export interface WorkloadDetailsRequestInfo {
+  workload_name: string;
+  workload_namespace: string;
+  workload_uuid?: string;
 }
 
-export interface ServiceInstanceInfo {
-  clusterName: string;
+export interface WorkloadInstanceInfo {
+  cluster_name: string;
   status: string;
-  workloadUUID: string;
+  workload_uuid: string;
 }

@@ -18,7 +18,7 @@ import { EntityKomodorServiceTableCard } from './EntityKomodorServiceTableCard';
 import { EntityProvider } from '@backstage/plugin-catalog-react';
 import { TestApiProvider, renderInTestApp } from '@backstage/test-utils';
 import { KomodorApi, komodorApiRef } from '../api';
-import { ServiceInstanceInfo } from '../types/types';
+import { WorkloadInstanceInfo } from '../types/types';
 
 describe('EntityKomodorServiceTableCard', () => {
   const entity = {
@@ -37,10 +37,10 @@ describe('EntityKomodorServiceTableCard', () => {
   };
 
   const komodorApi: Partial<KomodorApi> = {
-    getServiceInstances: () =>
+    getWorkloadInstances: () =>
       Promise.resolve([
-        { clusterName: 'cname1', workloadUUID: 'uuid1', status: 'Healthy' },
-      ] as ServiceInstanceInfo[]),
+        { cluster_name: 'cname1', workload_uuid: 'uuid1', status: 'Healthy' },
+      ] as WorkloadInstanceInfo[]),
   };
 
   it('Show the table', async () => {

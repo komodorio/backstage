@@ -17,10 +17,13 @@
 import { DiscoveryApi, IdentityApi } from '@backstage/core-plugin-api';
 import { ResponseError } from '@backstage/errors';
 import { KomodorApi } from './komodorApi';
-import { ServiceDetailsRequestInfo, ServiceInstanceInfo } from '../types/types';
+import {
+  WorkloadDetailsRequestInfo,
+  WorkloadInstanceInfo,
+} from '../types/types';
 
 const PLUGIN_ID: string = 'komodor';
-const PATH: string = 'services';
+const PATH: string = 'workload';
 
 export class KomodorClient implements KomodorApi {
   private readonly discoveryApi: DiscoveryApi;
@@ -40,16 +43,16 @@ export class KomodorClient implements KomodorApi {
    * @param serviceName The name of the service
    * @returns Info about the service instances
    */
-  public async getServiceInstances(
-    info: ServiceDetailsRequestInfo,
-  ): Promise<ServiceInstanceInfo[]> {
+  public async getWorkloadInstances(
+    info: WorkloadDetailsRequestInfo,
+  ): Promise<WorkloadInstanceInfo[]> {
     try {
-      const { workloadName, workloadNamespace, workloadUUID } = info;
+      const { workload_name, workload_namespace, workload_uuid } = info;
 
       const path: URLSearchParams = new URLSearchParams({
-        workload_name: workloadName ?? 'default',
-        workload_namespace: workloadNamespace ?? 'default',
-        workload_uuid: workloadUUID ?? 'default',
+        workload_name: workload_name ?? 'default',
+        workload_namespace: workload_namespace ?? 'default',
+        workload_uuid: workload_uuid ?? '',
       });
 
       const items = await this.get<any>(
