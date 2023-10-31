@@ -63,7 +63,7 @@ export class KomodorWorker {
     this.api = new KomodorApi({ apiKey, url });
     this.cache = new WorkloadCache();
     this.cacheOptions = cacheOptions ?? defaultCacheOptions;
-    this.signal = false;
+    this.signal = true;
   }
 
   /**
@@ -93,17 +93,14 @@ export class KomodorWorker {
         workload_uuid: queryParams.get(API_QUERY_PARAMS_WORKLOAD_UUID) ?? '',
       };
 
-      console.log(`Params: ${JSON.stringify(params)}`);
       const { shouldFetch } = cacheOptions;
 
       // Fetched the data from the cache, whether it's a single workload or multiple.
       let existingData: Workload[] | undefined;
 
       if (shouldFetch) {
-        if (queryParams.has(API_QUERY_PARAMS_WORKLOAD_UUID)) {
-          const workload = this.cache.getWorkloadByUUID(
-            params?.workload_uuid ?? '',
-          );
+        if (params.workload_uuid && queryParams.has(params.workload_uuid)) {
+          const workload = this.cache.getWorkloadByUUID(params?.workload_uuid);
 
           if (workload) {
             existingData = [workload];
@@ -118,7 +115,7 @@ export class KomodorWorker {
       }
       // Fetches the data right from Komodor or at least from the cache, after formatting it
       data =
-        shouldFetch && existingData
+        shouldFetch && existingData && existingData.length > 0
           ? existingData.map(function (workload) {
               return {
                 workload_uuid: workload.uuid,
@@ -129,7 +126,7 @@ export class KomodorWorker {
           : await this.api.fetch(params);
 
       // Why not updating the cache with some fresh data ;)?
-      if (!(existingData && shouldFetch)) {
+      if (shouldFetch) {
         data.forEach(workload => {
           const item = this.cache.getWorkloadByUUID(workload.workload_uuid);
 
@@ -138,6 +135,15 @@ export class KomodorWorker {
             item.status = workload.status;
 
             this.cache.setWorkload(item);
+          } else {
+            this.cache.setWorkload({
+              uuid: workload.workload_uuid,
+              name: params.workload_name,
+              namespace: params.workload_namespace,
+              clusterName: workload.cluster_name,
+              status: workload.status,
+              lastUpdateRequest: Date.now(),
+            });
           }
         });
       }
@@ -165,10 +171,11 @@ export class KomodorWorker {
   }
 
   private async startUpdatingCache() {
-    const tempCache = new WorkloadCache(this.cache);
+    this.signal = false;
 
     while (!this.signal) {
       try {
+        const tempCache = new WorkloadCache(this.cache);
         tempCache.forEach(async workload => {
           let result: boolean = true;
 
