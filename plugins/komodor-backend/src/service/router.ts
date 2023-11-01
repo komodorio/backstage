@@ -19,7 +19,7 @@ import Router from 'express-promise-router';
 import { KomodorWorker } from './komodorWorker';
 import { Config } from '@backstage/config';
 import { Logger } from 'winston';
-import { CacheOptions } from './serviceCache';
+import { CacheOptions } from './workloadCache';
 
 export interface RouterOptions {
   logger: Logger;

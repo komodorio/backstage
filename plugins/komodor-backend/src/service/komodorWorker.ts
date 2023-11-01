@@ -17,7 +17,7 @@
 import { ResponseError } from '@backstage/errors';
 import { KomodorApiRequestInfo, KomodorApiResponseInfo } from '../types/types';
 import { KomodorApi } from './komodorApi';
-import { CacheOptions, Workload, WorkloadCache } from './serviceCache';
+import { CacheOptions, Workload, WorkloadCache } from './workloadCache';
 
 const POLLING_INTERVAL = 5000;
 const CONSIDER_IRRELEVANT_DATA_INTERVAL = 30000;

@@ -1,4 +1,4 @@
-import { WorkloadCache, Workload } from './serviceCache';
+import { WorkloadCache, Workload } from './workloadCache';
 /*
  * Copyright 2023 The Backstage Authors
  *
