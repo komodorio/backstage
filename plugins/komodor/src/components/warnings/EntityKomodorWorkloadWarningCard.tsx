@@ -27,7 +27,7 @@ export interface WarningCardProps {
  * A generic alert
  * @returns
  */
-export function EntityKomodorServiceWarningCard({
+export function EntityKomodorWorkloadWarningCard({
   title,
   message,
 }: WarningCardProps) {

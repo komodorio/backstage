@@ -22,9 +22,9 @@ import useAsyncRetry from 'react-use/lib/useAsyncRetry';
 import useInterval from 'react-use/lib/useInterval';
 import { useApi } from '@backstage/core-plugin-api';
 
-const PLUGIN_WORKLOAD_UUID_ANNOTATION = 'komodor.com/workloadUUID';
-const PLUGIN_WORKLOAD_NAME_ANNOTATION = 'komodor.com/workloadName';
-const PLUGIN_WORKLOAD_NAMESPACE_ANNOTATION = 'komodor.com/workloadNamespace';
+const PLUGIN_WORKLOAD_UUID_ANNOTATION = 'komodor.io/komodor-entity-id';
+const PLUGIN_WORKLOAD_NAME_ANNOTATION = 'komodor.io/workload-name';
+const PLUGIN_WORKLOAD_NAMESPACE_ANNOTATION = 'komodor.io/workload-namespace';
 const API_QUERY_PARAM_DEFAULT_VALUE = 'default';
 const POLLING_INTERVAL_MS = 5000;
 

@@ -19,7 +19,7 @@ import { WorkloadStatus } from '../types/types';
 import { useEntity } from '@backstage/plugin-catalog-react';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
 import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
-import { EntityKomodorServiceWarningCard } from './warnings';
+import { EntityKomodorWorkloadWarningCard } from './warnings';
 import { useWorkloadInstancesFetcher } from '../hooks';
 
 const columns: TableColumn[] = [
@@ -50,7 +50,7 @@ const columns: TableColumn[] = [
   },*/
 ];
 
-export function EntityKomodorServiceTableCard() {
+export function EntityKomodorWorkloadTableCard() {
   const { entity } = useEntity();
   const { objects, error } = useWorkloadInstancesFetcher(entity);
   const [lastObjects, setLastObjects] = useState(objects);
@@ -102,7 +102,7 @@ export function EntityKomodorServiceTableCard() {
   return (
     <>
       {error ? (
-        <EntityKomodorServiceWarningCard
+        <EntityKomodorWorkloadWarningCard
           title="An error occurred in the server"
           message={error}
         />

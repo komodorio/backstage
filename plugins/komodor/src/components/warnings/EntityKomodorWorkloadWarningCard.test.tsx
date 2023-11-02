@@ -15,11 +15,11 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { EntityKomodorServiceWarningCard } from './EntityKomodorServiceWarningCard';
+import { EntityKomodorWorkloadWarningCard } from './EntityKomodorWorkloadWarningCard';
 
 describe('Show alert', () => {
   it('renders the user table', async () => {
-    render(<EntityKomodorServiceWarningCard title="mock" message="message" />);
+    render(<EntityKomodorWorkloadWarningCard title="mock" message="message" />);
 
     // Wait for the table to render
     const table = await screen.findByRole('alert');

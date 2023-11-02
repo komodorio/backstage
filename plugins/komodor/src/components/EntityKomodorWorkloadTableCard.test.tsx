@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import React from 'react';
-import { EntityKomodorServiceTableCard } from './EntityKomodorServiceTableCard';
+import { EntityKomodorWorkloadTableCard } from './EntityKomodorWorkloadTableCard';
 import { EntityProvider } from '@backstage/plugin-catalog-react';
 import { TestApiProvider, renderInTestApp } from '@backstage/test-utils';
 import { KomodorApi, komodorApiRef } from '../api';
 import { WorkloadInstanceInfo } from '../types/types';
 
-describe('EntityKomodorServiceTableCard', () => {
+describe('EntityKomodorWorkloadTableCard', () => {
   const entity = {
     apiVersion: 'v1',
     kind: 'Component',
@@ -28,10 +28,9 @@ describe('EntityKomodorServiceTableCard', () => {
       name: 'software',
       description: 'This is the description',
       annotations: {
-        'komodor.com/komodor-entity-id': '123efa3789ff0dc',
-        wokloadName: 'my_workload_name',
-        workloadNamespace: 'my_workload_namespace',
-        workloadUUID: 'my_workload_uuid',
+        'komodor.io/komodor-entity-id': 'uuid1',
+        'komodor.io/workload-name': 'my_workload_name',
+        'komodor.io/workload-namespace': 'my_workload_namespace',
       },
     },
   };
@@ -47,7 +46,7 @@ describe('EntityKomodorServiceTableCard', () => {
     const { getByText } = await renderInTestApp(
       <TestApiProvider apis={[[komodorApiRef, komodorApi]]}>
         <EntityProvider entity={entity}>
-          <EntityKomodorServiceTableCard />
+          <EntityKomodorWorkloadTableCard />
         </EntityProvider>
       </TestApiProvider>,
     );

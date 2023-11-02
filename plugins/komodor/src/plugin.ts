@@ -24,7 +24,7 @@ import { komodorApiRef, KomodorClient } from './api';
 import { rootRouteRef } from './routes';
 import { Entity } from '@backstage/catalog-model';
 
-export const KOMODOR_ID_ANNOTATION = 'komodor.com/komodor-entity-id';
+export const KOMODOR_ID_ANNOTATION = 'komodor.io/komodor-entity-id';
 
 export const komodorPlugin = createPlugin({
   id: 'komodor',
@@ -42,7 +42,7 @@ export const EntityKomodorContent = komodorPlugin.provide(
   createRoutableExtension({
     name: 'EntityKomodorContent',
     component: () =>
-      import('./components/EntityKomodorServiceTableCard').then(
+      import('./components/EntityKomodorWorkloadTableCard').then(
         m => m.EntityKomodorServiceTableCard,
       ),
     mountPoint: rootRouteRef,
