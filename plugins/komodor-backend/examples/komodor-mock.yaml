@@ -5,6 +5,8 @@ metadata:
   title: komodor entity
   description: Mock for testing Komodor
   annotations:
+    # Mandatory for displaying the tab in the entity. Value should be the the workload UUID
+    # or if workload UUID not used, any non empty/whitespace value of your choice.
     komodor.io/komodor-entity-id: my_workload_uuidA
     # These two are optional. When set (both of them must be set), ignores the uuid.  
     komodor.io/workload-name: my_workload_name1A
