@@ -43,7 +43,7 @@ export const EntityKomodorContent = komodorPlugin.provide(
     name: 'EntityKomodorContent',
     component: () =>
       import('./components/EntityKomodorWorkloadTableCard').then(
-        m => m.EntityKomodorServiceTableCard,
+        m => m.EntityKomodorWorkloadTableCard,
       ),
     mountPoint: rootRouteRef,
   }),
