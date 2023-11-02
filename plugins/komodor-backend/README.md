@@ -31,14 +31,13 @@ The API key used for accessing the Komodor service.
 
 - `shouldFetch`: Should data be fetched from the cache each client request, if
   already exists. Default is false.
-- `shouldUpdate`: Should the cache be updated constantly.
+- `shouldUpdate`: Should the cache be updated constantly. Default is false.
 
 In addition, configuration of an entity's `catalog-info.yaml` helps identify which specific Komodor object(s) should be presented on a specific entity catalog page.
 Specifically you might add the reference to this file to the `app.config.yaml` file,
 by adding it to the `catalog.locations` field.
 
 An example of such file can be found in `plugins/komodor-backend/examples/`.
-NOTICE: All the annotations in the above-mentioned file must appear in your entity file.
 
 For more information, see the [formal documentation about the Kubernetes feature in Backstage](https://backstage.io/docs/features/kubernetes/overview).
 
