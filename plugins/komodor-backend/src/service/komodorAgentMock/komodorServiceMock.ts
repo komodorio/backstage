@@ -55,7 +55,11 @@ app.get('/workload', (req, res) => {
   const dataPerUUID = cache.get(workload_uuid);
   let requestedData;
 
-  if (dataPerUUID) {
+  if (
+    dataPerUUID &&
+    workload_name === 'default' &&
+    workload_namespace === 'default'
+  ) {
     if (workload_uuid !== 'default') {
       // No need to filter as there's only one workload with this UUID.
       requestedData = [dataPerUUID];
