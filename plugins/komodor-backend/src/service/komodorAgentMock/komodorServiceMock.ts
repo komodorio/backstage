@@ -21,35 +21,35 @@ const port = 7008;
 
 const cache = new Map();
 
-cache.set('my_workload_uuidA', {
+cache.set('63ac5c15-3342-498d-a9e9-c2bb72577bbd', {
   workloadName: 'my_workload_name1A',
   workloadNamespace: 'my_workload_namespace1A',
-  clusterName: 'my_workload_cluster_name1_1A',
+  clusterName: 'local',
   status: 'Healthy',
-  workloadUUID: 'my_workload_uuidA',
+  workloadUUID: '63ac5c15-3342-498d-a9e9-c2bb72577bbd',
 });
 
-cache.set('my_workload_uuidB', {
+cache.set('992b5d96-a6c3-4dbd-8a21-4238ce8d8010', {
   workloadName: 'my_workload_name1B',
   workloadNamespace: 'my_workload_namespace1A',
-  clusterName: 'my_workload_cluster_name1_1A',
+  clusterName: 'local',
   status: 'Unhealthy',
-  workloadUUID: 'my_workload_uuidB',
+  workloadUUID: '992b5d96-a6c3-4dbd-8a21-4238ce8d8010',
 });
 
-cache.set('my_workload_uuidC', {
+cache.set('ef9a01d9-2854-4bfd-959e-91427afbadf6', {
   workloadName: 'my_workload_name1A',
   workloadNamespace: 'my_workload_namespace1A',
-  clusterName: 'my_workload_cluster_name1_1C',
+  clusterName: 'local',
   status: 'Healthy',
-  workloadUUID: 'my_workload_uuidC',
+  workloadUUID: 'ef9a01d9-2854-4bfd-959e-91427afbadf6',
 });
 
 app.get('/workload', (req, res) => {
   const {
-    workload_name = 'default',
-    workload_namespace = 'default',
-    workload_uuid = 'default',
+    workload_name = '!default!',
+    workload_namespace = '!default!',
+    workload_uuid = '!default!',
   } = req.query;
   console.log(req.query);
   const dataPerUUID = cache.get(workload_uuid);
@@ -57,10 +57,10 @@ app.get('/workload', (req, res) => {
 
   if (
     dataPerUUID &&
-    workload_name === 'default' &&
-    workload_namespace === 'default'
+    workload_name === '!default!' &&
+    workload_namespace === '!default!'
   ) {
-    if (workload_uuid !== 'default') {
+    if (workload_uuid !== '!default!') {
       // No need to filter as there's only one workload with this UUID.
       requestedData = [dataPerUUID];
     }

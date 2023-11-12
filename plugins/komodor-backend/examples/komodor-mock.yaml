@@ -1,16 +1,21 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: komodor-mock
+  name: dice-roller
   title: komodor entity
   description: Mock for testing Komodor
   annotations:
-    # Mandatory for displaying the tab in the entity. Value should be the the workload UUID
-    # or if workload UUID not used, any non empty/whitespace value of your choice.
+    'backstage.io/kubernetes-id': dice-roller
+    # Mandatory for displaying the tab in the entity. Any non empty/whitespace value
+    # is welcomed.
     komodor.io/komodor-entity-id: my_workload_uuidA
-    # These two are optional. When set (both of them must be set), ignores the uuid.  
+    # If not set, fetches by UUIDs. If set, only both! 
     komodor.io/workload-name: my_workload_name1A
     komodor.io/workload-namespace: my_workload_namespace1A
+    # Clusters to fetch data from
+    komodor.io/clusters: 'local, cluster_a'
+    # (Optional) Custom workload UIDs.
+    komodor.io/custom-uids: 'uuid_podA, uuid_pod_b'
 spec:
   type: website
   lifecycle: experimental

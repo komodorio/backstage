@@ -174,8 +174,7 @@ kubernetes:
   serviceLocatorMethod:
     type: 'multiTenant'
   clusterLocatorMethods:
-    - type: 'config'
-      clusters: []
+    - type: 'localKubectlProxy'
 
 kafka:
   clientId: backstage
@@ -294,6 +293,13 @@ catalog:
     # Komodor example templates
     - type: file
       target: ../../plugins/komodor-backend/examples/komodor-mock.yaml
+    # Komodor example templates
+    - type: file
+      target: ../../plugins/komodor-backend/examples/komodor-mock_copy.yaml
+    # Kubernetes
+    - type: file
+      target: ../../plugins/kubernetes-backend/examples/dice-roller/catalog-info.yaml
+      
 scaffolder:
   # Use to customize default commit author info used when new components are created
   # defaultAuthor:
