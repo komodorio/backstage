@@ -1,11 +1,11 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: dice-roller
+  name: komodor
   title: komodor entity
   description: Mock for testing Komodor
   annotations:
-    'backstage.io/kubernetes-id': dice-roller
+    # 'backstage.io/kubernetes-id': your-item (see K8s docs)
     # Mandatory for displaying the tab in the entity. Any non empty/whitespace value
     # is welcomed.
     komodor.io/komodor-entity-id: my_id
@@ -13,7 +13,7 @@ metadata:
     komodor.io/workload-name: my_workload_name1A
     komodor.io/workload-namespace: my_workload_namespace1A
     # K8s clusters to fetch data from
-    # Should be explicilty configured in the app-config.yaml K8s section (read docs).
+    # Should be explicilty configured in the app-config.yaml K8s section (see K8s docs).
     komodor.io/clusters: 'local, cluster_a'
     # (Optional) Custom workload UIDs. Added to UIDs fetched from the clusters (if any)
     komodor.io/custom-uids: 'uuid_podA, uuid_pod_b'
