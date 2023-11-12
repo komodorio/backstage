@@ -20,7 +20,7 @@ import { useEntity } from '@backstage/plugin-catalog-react';
 import { MissingAnnotationEmptyState } from '@backstage/core-components';
 import { KOMODOR_ID_ANNOTATION, isKomodorAvailable } from '../plugin';
 import { EntityKomodorWorkloadWarningCard } from './warnings';
-import { useWorkloadInstancesFetcher } from '../hooks';
+import { useWorkloadFilter, useWorkloadInstancesFetcher } from '../hooks';
 
 const columns: TableColumn[] = [
   {
@@ -52,7 +52,8 @@ const columns: TableColumn[] = [
 
 export function EntityKomodorWorkloadTableCard() {
   const { entity } = useEntity();
-  const { objects, error } = useWorkloadInstancesFetcher(entity);
+  const filter = useWorkloadFilter(entity);
+  const { objects, error } = useWorkloadInstancesFetcher(filter);
   const [lastObjects, setLastObjects] = useState(objects);
 
   useEffect(() => {
